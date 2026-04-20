@@ -1,0 +1,121 @@
+#products {
+    background-color: lightblue;
+    transition: all 300ms ease;
+}
+
+.dark #products {
+    background-color: darkblue;
+    transition: all 300ms ease;
+}
+
+
+.all__products--container {
+    padding-bottom: 30px;
+}
+
+.products__title {
+    text-align: center;
+    font-size: clamp(1rem, 5vw, 30px);
+    font-weight: bold;
+    padding-top: 30px;
+    transition: all 300ms ease;
+}
+
+.dark .products__title {
+    color: white;
+    transition: all 300ms ease;
+}
+
+select {
+    position: absolute;
+    right: 0;
+    cursor: pointer;
+}
+
+
+.search {
+    position: relative;
+    left: 50%;
+    cursor: pointer;
+}
+
+#category {
+    position: relative;
+
+}
+
+.faSearch {
+    cursor: pointer;
+    position: absolute;
+    right: 50%;
+    top: -5%;
+    transform: translateY(-50%);
+    z-index: 5;
+    transition: all 300ms ease;
+}
+
+.dark .faSearch {
+    color: white;
+}
+
+
+.search__container {
+    display: flex;
+    justify-content: center;
+    transition: all 300ms ease;
+}
+
+.input__container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 330px;
+}
+
+.input {
+    border-radius: 25px;
+    width: 100%;
+    padding: 12px 30px;
+    transition: all 300ms ease;
+    visibility: hidden;
+    opacity: 0;
+}
+
+.input.open {
+    visibility: visible;
+    opacity: 1;
+}
+
+.times {
+    cursor: pointer;
+}
+
+.dark .times {
+    color: white;
+}
+
+@media(max-width:588px) {
+    .input {
+        padding: 0px 12px;
+        margin-top: 12px;
+        width: 90%;
+    }
+}
+
+@media(max-width:462px) {
+
+    #filter {
+        font-size: 9px;
+    }
+
+    #category {
+        font-size: 9px;
+    }
+
+    .faSearch{
+        font-size:12px;
+    }
+}

@@ -1,0 +1,114 @@
+#footer {
+    background-color: aliceblue;
+    transition: all 300ms ease;
+}
+
+.dark #footer {
+    background-color: rgb(1, 21, 39);
+    transition: all 300ms ease;
+}
+
+.footer__container {
+    display: flex;
+    justify-content: center;
+}
+
+.footer__links {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+.footer__link {
+    padding-left: 30px;
+    font-weight: bold;
+    font-size: 20px;
+    color: blue;
+    transition: all 300ms ease;
+}
+
+.dark .footer__link{
+    color:orange;
+    transition:all 300ms ease;
+}
+
+.footer__link:hover{
+    color:orange;
+    transition:all 300ms ease;
+}
+
+.dark .footer__link:hover{
+    color:blue;
+    transition:all 300mw ease;
+}
+
+.footer__logo--img {
+    width: 100%;
+    max-width: 200px;
+    padding-bottom: 30px;
+    padding-top: 50px;
+}
+
+.footer__copyright {
+    text-align: center;
+    padding-bottom: 30px;
+    font-weight: bold;
+    font-size: clamp(0.8em, 1.5vw, 18px);
+    transition: all 300ms ease;
+}
+
+.dark .footer__copyright {
+    color: white;
+    transition: all 300ms ease;
+}
+
+.app__store--container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 10px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.google__play {
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+}
+
+.apple__store {
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+}
+
+@media(max-width:679px) {
+    .footer__links {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-bottom: 20px;
+        margin: 0 auto;
+        padding-right: 25px;
+    }
+
+    .app__store--container {
+        flex-direction: column;
+    }
+}
+
+@media(max-width:400px) {
+    .footer__logo {
+        width: 60%;
+    }
+
+    .app__store--container {
+        width: 40%;
+        align-items: center;
+        margin: 0 auto;
+        padding-bottom: 15px;
+    }
+}

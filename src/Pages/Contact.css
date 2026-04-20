@@ -1,0 +1,185 @@
+#contact{
+    background-color:rgb(137, 227, 255);
+    transition:all 300ms ease;
+}
+
+.dark #contact{
+    background-color:rgb(6, 47, 59);
+    transition:all 300ms ease;
+}
+
+.contact__title{
+    text-align: center;
+    font-size:39px;
+    padding-bottom:30px;
+    padding-top:20px;
+    transition:all 300ms ease;
+}
+
+.dark .contact__title{
+    color:white;
+    transition:all 300ms ease;
+}
+
+.contact__input--container{
+    display: flex;
+    flex-direction:column;
+    align-items: center;
+    gap:30px;
+
+}
+
+.contact_info--title{
+     text-align: center;
+    font-size:39px;
+    padding-bottom:30px;
+    transition: all 300ms ease;
+}
+
+.dark .contact_info--title{
+    color:white;
+    transition: all 300ms ease;
+}
+
+.contact__info--container{
+    display: flex;
+    justify-content: center;
+    flex-direction:column;
+    align-items: center;
+    gap:30px;
+}
+
+
+.btn{
+    background-color:blue;
+    padding:17px 24px;
+    color:white;
+    border:none;
+    outline:none;
+    cursor:pointer;
+    border-radius:29px;
+    font-size:clamp(1rem, 5vw, 19px);
+    transition:all 300ms ease;
+    margin-bottom:90px;
+}
+
+.dark .btn{
+    background-color:orange;
+    color:black;
+    transition:all 300ms ease;
+}
+
+.dark .btn:hover{
+    background-color:blue;
+    color:white;
+
+}
+
+input, textarea{
+    padding:12px 15px;
+    font-size:16px;
+}
+
+.form-group{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap:15px;
+    margin-bottom: 20px;
+}
+
+.phone_number{
+    font-size: 24px;
+}
+
+.dark .phone_number{
+    color:white;
+}
+
+.dark .email_address{
+    color:white;
+}
+
+.email_address{
+    font-size:24px;
+    margin-bottom:100px;
+}
+
+.phone{
+    color:blue;
+    font-weight:bold;
+    transition:all 300ms ease;
+}
+
+.email{
+    color:blue;
+    font-weight:bold;
+    transition:all 300ms ease;
+}
+
+.phone:hover{
+    color:orange;
+    transition:all 300ms ease;
+}
+
+.email:hover{
+    color:orange;
+    transition:all 300ms ease;
+}
+
+
+.dark .phone{
+    color:orange;
+    transition:all 300ms ease;
+}
+
+.dark .email{
+    color:orange;
+    transition:all 300ms ease;
+}
+
+
+.dark .phone:hover{
+    color:blue;
+    transition:all 300ms ease;
+}
+
+
+.dark .email:hover{
+    color:blue;
+    transition:all 300ms ease;
+}
+
+
+
+@media(max-width:460px){
+    .contact__title{
+        font-size:24px;
+    }
+
+    .contact_info--title{
+        font-size:24px;
+    }
+
+    .phone_number{
+        font-size:18px;
+    }
+
+    .email_address{
+        font-size:18px;
+    }
+}
+
+
+@media(max-width:382px){
+    
+    .phone_number{
+        font-size:13px;
+        width:90%;
+    }
+
+    .email_address{
+        font-size:13px;
+        width:90%;
+    }
+}
