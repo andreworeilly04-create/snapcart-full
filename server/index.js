@@ -11,6 +11,8 @@ if (!process.env.STRIPE_SECRET_KEY) {
     process.exit(1);
 }
 
+const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+
 if (!process.env.CLIENT_URL) {
     console.warn("⚠️ CLIENT_URL missing, using default http://localhost:3000");
 }
@@ -24,7 +26,7 @@ const db = admin.firestore();
 const app = express();
 
 // ✅ CORS
-app.use(cors({ origin:true, credentials:true,
+app.use(cors({ origin:[clientUrl, "https://snapcart-sigma-inky.vercel.app"], credentials:true,
     methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
