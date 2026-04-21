@@ -3,62 +3,61 @@ const express = require('express');
 const cors = require('cors');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
 
-// 🔥 ENV VALIDATION
-if (!process.env.STRIPE_SECRET_KEY) {
-    console.error("❌ Missing STRIPE_SECRET_KEY in .env");
-    process.exit(1);
-}
-
-const clientUrl = process.env.CLIENT_URL || "https://snapcart-sigma-inky.vercel.app";
-
-if (!process.env.CLIENT_URL) {
-    console.warn("⚠️ CLIENT_URL missing, using default https://snapcart-sigma-inky.vercel.app");
-}
-
-// 🔥 INIT FIREBASE
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
-
-const db = admin.firestore();
 const app = express();
 
-// ✅ CORS
-app.use(cors({ 
-    origin: function (origin, callback) {
-        if (!origin || origin.includes('localhost') || origin.includes('vercel.app')){
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials:true,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+// 🔐 ENV CHECK (no crashing)
+if (!process.env.STRIPE_SECRET_KEY) {
+    console.error("❌ STRIPE_SECRET_KEY missing");
+}
+
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("❌ STRIPE_WEBHOOK_SECRET missing");
+}
+
+const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-sigma-inky.vercel.app";
+
+// 🔥 INIT FIREBASE (ENV-BASED)
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY
+                ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+                : undefined,
+        }),
+    });
+} catch (err) {
+    console.error("❌ Firebase init error:", err);
+}
+
+const db = admin.firestore();
+
+// ✅ CORS (relaxed for debugging)
+app.use(cors({
+    origin: true,
+    credentials: true,
 }));
 
 // ✅ HEALTH CHECK
 app.get('/', (req, res) => {
-    res.send('Server is running');
+    res.status(200).send('Server is running');
 });
 
-
-// 🔐 AUTH MIDDLEWARE (optional)
+// 🔐 AUTH MIDDLEWARE
 const verifyToken = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    console.log("AUTH HEADER:", authHeader);
-
-    const token = authHeader?.split('Bearer ')[1];
-
-    if (!token) {
-        return res.status(401).send('Unauthorized');
-    }
-
     try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.split('Bearer ')[1];
+
+        if (!token) {
+            return res.status(401).send('Unauthorized');
+        }
+
         const decoded = await admin.auth().verifyIdToken(token);
         req.user = decoded;
+
         next();
     } catch (err) {
         console.error("❌ Auth error:", err);
@@ -66,15 +65,11 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
+// 🔥 STRIPE WEBHOOK (raw BEFORE json)
+app.use('/webhook', express.raw({ type: 'application/json' }));
 
-// 🔥 STRIPE WEBHOOK (MUST BE BEFORE express.json)
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook', async (req, res) => {
     const sig = req.headers['stripe-signature'];
-
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-        console.error("❌ Missing STRIPE_WEBHOOK_SECRET");
-        return res.status(500).send("Webhook not configured");
-    }
 
     let event;
 
@@ -86,36 +81,28 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         );
     } catch (err) {
         console.error("❌ Webhook signature error:", err.message);
-        return res.status(400).send(`Webhook Error`);
+        return res.status(400).send('Webhook Error');
     }
 
-    console.log("📡 Event received:", event.type);
+    console.log("📡 Event:", event.type);
 
     try {
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
-
-            console.log("🧾 Full session:", session);
-
             const orderId = session.metadata?.orderId;
 
-            console.log("📦 Order ID from metadata:", orderId);
-
             if (!orderId) {
-                return res.status(400).send("Missing orderId in metadata");
+                return res.status(400).send("Missing orderId");
             }
 
             const orderRef = db.collection('orders').doc(orderId);
             const orderDoc = await orderRef.get();
 
             if (!orderDoc.exists) {
-                console.error("❌ Order not found:", orderId);
                 return res.status(404).send("Order not found");
             }
 
-            // ✅ Prevent duplicate processing
             if (orderDoc.data().status === 'Paid') {
-                console.log("⚠️ Order already processed");
                 return res.json({ received: true });
             }
 
@@ -126,54 +113,42 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            console.log("✅ Order marked as PAID");
+            console.log("✅ Order marked PAID:", orderId);
         }
 
         res.json({ received: true });
 
-    } catch (error) {
-        console.error("❌ Webhook processing error:", error);
+    } catch (err) {
+        console.error("❌ Webhook processing error:", err);
         res.status(500).send("Webhook failed");
     }
 });
 
-
-// ✅ JSON middleware AFTER webhook
+// ✅ JSON AFTER webhook
 app.use(express.json());
 
-
-// 💰 HELPER: CALCULATE TOTAL
+// 💰 HELPER
 const calculateTotal = (items) => {
     return items.reduce((total, item) => {
         return total + (Number(item.price) * Number(item.quantity));
     }, 0);
 };
 
-
-// 🧾 CREATE STRIPE CHECKOUT SESSION
+// 🧾 CREATE CHECKOUT SESSION
 app.post('/create-checkout-session', async (req, res) => {
-    console.log("📥 Incoming body:", req.body);
-
-    const { items, userId, address } = req.body;
-
-    if (!Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: "Items must be a non-empty array" });
-    }
-
-    if (!userId || !address) {
-        return res.status(400).json({ error: "Missing userId or address" });
-    }
-
     try {
-        // ✅ SAFE CLIENT URL
-        const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-sigma-inky.vercel.app";
-        console.log("🌐 CLIENT_URL:", CLIENT_URL);
+        const { items, userId, address } = req.body;
 
-        // ✅ CALCULATE TOTAL
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: "Invalid items" });
+        }
+
+        if (!userId || !address) {
+            return res.status(400).json({ error: "Missing userId or address" });
+        }
+
         const total = calculateTotal(items);
-        console.log("💰 Calculated total:", total);
 
-        // ✅ CREATE ORDER
         const orderRef = await db.collection('orders').add({
             userId,
             items,
@@ -184,9 +159,6 @@ app.post('/create-checkout-session', async (req, res) => {
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log("📝 Order created:", orderRef.id);
-
-        // ✅ CREATE STRIPE SESSION
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
@@ -194,9 +166,7 @@ app.post('/create-checkout-session', async (req, res) => {
             line_items: items.map(item => ({
                 price_data: {
                     currency: 'usd',
-                    product_data: {
-                        name: item.name
-                    },
+                    product_data: { name: item.name },
                     unit_amount: Math.round(Number(item.price) * 100),
                 },
                 quantity: Number(item.quantity),
@@ -210,28 +180,23 @@ app.post('/create-checkout-session', async (req, res) => {
             }
         });
 
-        console.log("✅ Stripe session created:", session.id);
-
         res.json({ url: session.url });
 
-    } catch (error) {
-        console.error("❌ Stripe session error:", error);
-        res.status(500).json({ error: error.message });
+    } catch (err) {
+        console.error("❌ Stripe session error:", err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
-// 💵 CASH ON DELIVERY
+// 💵 COD
 app.post('/create-cod-order', async (req, res) => {
-    console.log("📥 COD body:", req.body);
-
-    const { items, userId, address } = req.body;
-
-    if (!items || !userId || !address) {
-        return res.status(400).json({ error: "Missing required fields" });
-    }
-
     try {
+        const { items, userId, address } = req.body;
+
+        if (!items || !userId || !address) {
+            return res.status(400).json({ error: "Missing fields" });
+        }
+
         const total = calculateTotal(items);
 
         const orderRef = await db.collection('orders').add({
@@ -244,51 +209,38 @@ app.post('/create-cod-order', async (req, res) => {
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log("📝 COD Order created:", orderRef.id);
+        res.status(201).json({
+            success: true,
+            orderId: orderRef.id
+        });
 
-        res.status(201).json({ success: true, orderId: orderRef.id });
-
-    } catch (error) {
-        console.error("❌ COD error:", error);
-        res.status(500).json({ error: error.message });
+    } catch (err) {
+        console.error("❌ COD error:", err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
-// 🔄 UPDATE ORDER STATUS
+// 🔄 UPDATE STATUS
 app.post('/update-order-status', verifyToken, async (req, res) => {
-    console.log("📥 Update status body:", req.body);
-
-    const { orderId, newStatus } = req.body;
-
-    if (!orderId || !newStatus) {
-        return res.status(400).json({ error: "Missing fields" });
-    }
-
     try {
+        const { orderId, newStatus } = req.body;
+
+        if (!orderId || !newStatus) {
+            return res.status(400).json({ error: "Missing fields" });
+        }
+
         await db.collection('orders').doc(orderId).update({
             status: newStatus,
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log("✅ Order status updated:", orderId);
-
         res.json({ success: true });
 
-    } catch (error) {
-        console.error("❌ Status update error:", error);
-        res.status(500).json({ error: error.message });
+    } catch (err) {
+        console.error("❌ Update error:", err);
+        res.status(500).json({ error: err.message });
     }
 });
 
-
-// 🚀 START SERVER
-
-if (process.env.NODE_ENV !== 'production'){
-    const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
-}
-
+// 🚀 EXPORT (NO app.listen)
 module.exports = app;
