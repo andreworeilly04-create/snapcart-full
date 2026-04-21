@@ -11,10 +11,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
     process.exit(1);
 }
 
-const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+const clientUrl = process.env.CLIENT_URL || "https://snapcart-sigma-inky.vercel.app";
 
 if (!process.env.CLIENT_URL) {
-    console.warn("⚠️ CLIENT_URL missing, using default http://localhost:3000");
+    console.warn("⚠️ CLIENT_URL missing, using default https://snapcart-sigma-inky.vercel.app");
 }
 
 // 🔥 INIT FIREBASE
@@ -157,7 +157,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
     try {
         // ✅ SAFE CLIENT URL
-        const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:3000";
+        const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-sigma-inky.vercel.app";
         console.log("🌐 CLIENT_URL:", CLIENT_URL);
 
         // ✅ CALCULATE TOTAL
