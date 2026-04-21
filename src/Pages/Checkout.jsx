@@ -93,7 +93,7 @@ const Checkout = ({ cart, setCart }) => {
 
         if (paymentMethod === 'COD') {
             try {
-                const API_BASE_URL = process.env.REACT_APP_API_URL ||'http://localhost:4000'; 
+                const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000'; 
                 const response = await fetch(`${API_BASE_URL}/create-cod-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -125,7 +125,7 @@ const Checkout = ({ cart, setCart }) => {
         else if (paymentMethod === 'stripe') {
             try {
 
-                const API_BASE_URL = process.env.REACT_APP_API_URL ||'http://localhost:4000'; 
+                const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000'; 
                 const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
