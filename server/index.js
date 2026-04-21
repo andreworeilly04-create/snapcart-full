@@ -26,8 +26,17 @@ const db = admin.firestore();
 const app = express();
 
 // ✅ CORS
-app.use(cors({ origin:[clientUrl, "http://localhost:3000"], credentials:true,
-    methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization']
+app.use(cors({ 
+    origin: function (origin, callback) {
+        if (!origin || origin.includes('localhost') || origin.includes('vercel.app')){
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials:true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // ✅ HEALTH CHECK

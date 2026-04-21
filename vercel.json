@@ -1,11 +1,10 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/create-checkout-session", "destination":
-      "/server/index.js"},
+    { "source": "/create-checkout-session", "destination": "/server/index.js"},
     { "source": "/create-cod-order",
       "destination": "/server/index.js" },
-    { "source": "/(.*)", "destination":
-      "/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" 
+    }
   ]
 }
