@@ -283,9 +283,12 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
 
 
 // 🚀 START SERVER
-const PORT = process.env.PORT || 4000;
+
+if (process.env.NODE_ENV !== 'production'){
+    const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+}
 
 module.exports = app;
