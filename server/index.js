@@ -26,7 +26,7 @@ const db = admin.firestore();
 const app = express();
 
 // ✅ CORS
-app.use(cors({ origin:[clientUrl, "https://snapcart-sigma-inky.vercel.app"], credentials:true,
+app.use(cors({ origin:[clientUrl, "http://localhost:3000"], credentials:true,
     methods: ['GET', 'POST', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
