@@ -93,6 +93,7 @@ const Login = ({ setUser }) => {
         <h3 className="login__title">Login</h3>
 
         <input
+        className="email"
           type="email"
           placeholder="Email"
           value={loginEmail}
@@ -101,6 +102,7 @@ const Login = ({ setUser }) => {
         />
 
         <input
+        className="password"
           type="password"
           placeholder="Password"
           value={loginPassword}
@@ -136,6 +138,7 @@ const Login = ({ setUser }) => {
 
         <input
           type="text"
+          className="first_name"
           placeholder="First Name"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
@@ -144,6 +147,7 @@ const Login = ({ setUser }) => {
 
         <input
           type="text"
+          className="last_name"
           placeholder="Last Name"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
@@ -152,6 +156,7 @@ const Login = ({ setUser }) => {
 
         <input
           type="email"
+          className="email"
           placeholder="Email"
           value={regEmail}
           onChange={(e) => setRegEmail(e.target.value)}
@@ -160,6 +165,7 @@ const Login = ({ setUser }) => {
 
         <input
           type="password"
+          className="password"
           placeholder="Password"
           value={regPassword}
           onChange={(e) => setRegPassword(e.target.value)}
@@ -168,6 +174,7 @@ const Login = ({ setUser }) => {
 
         <input
           type="password"
+          className="password"
           placeholder="Confirm Password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
