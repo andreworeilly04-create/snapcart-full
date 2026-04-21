@@ -24,7 +24,8 @@ const db = admin.firestore();
 const app = express();
 
 // ✅ CORS
-app.use(cors());
+app.use(cors({ origin:true, credentials:true
+}));
 
 // ✅ HEALTH CHECK
 app.get('/', (req, res) => {
