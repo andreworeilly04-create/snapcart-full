@@ -11,10 +11,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
     process.exit(1);
 }
 
-const clientUrl = process.env.CLIENT_URL || "https://snapcart-full-giin.vercel.app";
+const clientUrl = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
 
 if (!process.env.CLIENT_URL) {
-    console.warn("⚠️ CLIENT_URL missing, using default https://snapcart-full-giin.vercel.app");
+    console.warn("⚠️ CLIENT_URL missing, using default https://snapcart-store.vercel.app");
 }
 
 // 🔥 INIT FIREBASE
@@ -166,7 +166,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
     try {
         // ✅ SAFE CLIENT URL
-        const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-full-giin.vercel.app";
+        const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
         console.log("🌐 CLIENT_URL:", CLIENT_URL);
 
         // ✅ CALCULATE TOTAL
