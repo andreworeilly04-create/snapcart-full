@@ -79,7 +79,10 @@ const verifyToken = async (req, res, next) => {
 // =========================
 const calculateTotal = (items) => {
     const subtotal = items.reduce((total, item) => {
-        return total + (Number(item.price) * Number(item.quantity));
+        const price = Number(String(item.price).replace(/[^0-9.]/g, ""));
+        const qty = Number(item.quantity);
+
+        return total + (price * qty);
     }, 0);
 
     const shipping = items.length > 0 ? 5.99 : 0;
@@ -89,16 +92,19 @@ const calculateTotal = (items) => {
 };
 
 // =========================
-// VALIDATE ITEMS FOR STRIPE
+// STRIPE ITEM CLEANER (FIXED)
 // =========================
 const validateAndFormatItems = (items) => {
     return items.map((item, index) => {
-        const price = Number(item.price);
+
+        const price = Number(String(item.price).replace(/[^0-9.]/g, ""));
         const quantity = Number(item.quantity);
 
         if (!item.name) throw new Error(`Item ${index} missing name`);
-        if (!price || price <= 0) throw new Error(`Invalid price for ${item.name}`);
-        if (!quantity || quantity <= 0) throw new Error(`Invalid quantity for ${item.name}`);
+        if (!Number.isFinite(price) || price <= 0)
+            throw new Error(`Invalid price for ${item.name}`);
+        if (!Number.isFinite(quantity) || quantity <= 0)
+            throw new Error(`Invalid quantity for ${item.name}`);
 
         return {
             price_data: {
@@ -114,7 +120,7 @@ const validateAndFormatItems = (items) => {
 };
 
 // =========================
-// STRIPE CHECKOUT (FIXED)
+// STRIPE CHECKOUT (FIXED + SAFE)
 // =========================
 app.post('/create-checkout-session', async (req, res) => {
     const { items, userId, address } = req.body;
@@ -130,52 +136,45 @@ app.post('/create-checkout-session', async (req, res) => {
     try {
         const lineItems = validateAndFormatItems(items);
 
-        // ✅ Create order first
+        // ✅ KEEP IMAGES IN FIRESTORE
+        const cleanedItems = items.map(item => ({
+            name: item.name,
+            price: Number(String(item.price).replace(/[^0-9.]/g, "")),
+            quantity: Number(item.quantity),
+            image: item.image || null
+        }));
+
         const orderRef = await db.collection('orders').add({
             userId,
-            items,
+            items: cleanedItems,
             address,
             status: 'Pending',
             paymentMethod: 'stripe',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        // =========================
-        // STRIPE SESSION (SAFE MODE)
-        // =========================
         const session = await stripe.checkout.sessions.create({
             mode: 'payment',
             payment_method_types: ['card'],
-
             line_items: lineItems,
-
-            // ❌ REMOVED (these commonly break Stripe if not configured)
-            // automatic_tax
-            // shipping_options
-
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
-
             metadata: {
                 orderId: orderRef.id,
                 userId
             }
         });
 
-        if (!session.url) {
-            throw new Error("Stripe did not return checkout URL");
-        }
-
         return res.json({ url: session.url });
 
     } catch (error) {
-        console.error("❌ FULL STRIPE ERROR:", error);
+        console.error("❌ STRIPE ERROR:", error);
         return res.status(400).json({ error: error.message });
     }
 });
 
 // =========================
-// COD ORDER
+// COD ORDER (FIXED + IMAGES)
 // =========================
 app.post('/create-cod-order', async (req, res) => {
     const { items, userId, address } = req.body;
@@ -185,11 +184,18 @@ app.post('/create-cod-order', async (req, res) => {
     }
 
     try {
-        const total = calculateTotal(items);
+        const cleanedItems = items.map(item => ({
+            name: item.name,
+            price: Number(String(item.price).replace(/[^0-9.]/g, "")),
+            quantity: Number(item.quantity),
+            image: item.image || null
+        }));
+
+        const total = calculateTotal(cleanedItems);
 
         const orderRef = await db.collection('orders').add({
             userId,
-            items,
+            items: cleanedItems,
             address,
             amount: total,
             status: 'Order Placed (COD)',
@@ -230,7 +236,7 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
 });
 
 // =========================
-// WEBHOOK (UNCHANGED SAFE)
+// WEBHOOK (UNCHANGED)
 // =========================
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
