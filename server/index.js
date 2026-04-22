@@ -7,12 +7,12 @@ const serviceAccount = require('./serviceAccountKey.json');
 
 // 🔥 ENV VALIDATION
 if (!process.env.STRIPE_SECRET_KEY) {
-    console.error("❌ Missing STRIPE_SECRET_KEY in .env");
+    console.error("❌ Missing STRIPE_SECRET_KEY");
     process.exit(1);
 }
 
 if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    console.error("❌ Missing STRIPE_WEBHOOK_SECRET in .env");
+    console.error("❌ Missing STRIPE_WEBHOOK_SECRET");
     process.exit(1);
 }
 
@@ -58,7 +58,7 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
-// 🔥 STRIPE WEBHOOK (BEFORE JSON)
+// 🔥 STRIPE WEBHOOK
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
 
@@ -72,7 +72,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         );
     } catch (err) {
         console.error("❌ Webhook signature error:", err.message);
-        return res.status(400).send(`Webhook Error`);
+        return res.status(400).send('Webhook Error');
     }
 
     console.log("📡 Event:", event.type);
@@ -95,7 +95,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
             await orderRef.update({
                 status: 'Paid',
-                amount: session.amount_total / 100, // ✅ Stripe truth
+                amount: session.amount_total / 100,
                 currency: session.currency,
                 stripeSessionId: session.id,
                 customerEmail: session.customer_details?.email || null,
@@ -116,7 +116,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 // ✅ JSON middleware
 app.use(express.json());
 
-// 💰 HELPER (ONLY FOR COD)
+
+// 💰 COD TOTAL HELPER
 const calculateTotal = (items) => {
     const subtotal = items.reduce((total, item) => {
         return total + (Number(item.price) * Number(item.quantity));
@@ -127,6 +128,39 @@ const calculateTotal = (items) => {
 
     return Number((subtotal + shipping + tax).toFixed(2));
 };
+
+
+// 🔥 STRIPE HELPER (VALIDATION)
+const validateAndFormatItems = (items) => {
+    return items.map((item, index) => {
+        const price = Number(item.price);
+        const quantity = Number(item.quantity);
+
+        if (!item.name) {
+            throw new Error(`Item ${index} missing name`);
+        }
+
+        if (!price || price <= 0) {
+            throw new Error(`Invalid price for item: ${item.name}`);
+        }
+
+        if (!quantity || quantity <= 0) {
+            throw new Error(`Invalid quantity for item: ${item.name}`);
+        }
+
+        return {
+            price_data: {
+                currency: 'usd',
+                product_data: {
+                    name: item.name
+                },
+                unit_amount: Math.round(price * 100),
+            },
+            quantity
+        };
+    });
+};
+
 
 // 🧾 STRIPE CHECKOUT
 app.post('/create-checkout-session', async (req, res) => {
@@ -141,12 +175,13 @@ app.post('/create-checkout-session', async (req, res) => {
     }
 
     try {
-        // Create order (no amount yet)
+        const lineItems = validateAndFormatItems(items); // ✅ FIX
+
         const orderRef = await db.collection('orders').add({
             userId,
             items,
             address,
-            status: 'Pending Payment',
+            status: 'Canceled', // ✅ FIXED
             paymentMethod: 'stripe',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
@@ -155,14 +190,7 @@ app.post('/create-checkout-session', async (req, res) => {
             mode: 'payment',
             payment_method_types: ['card'],
 
-            line_items: items.map(item => ({
-                price_data: {
-                    currency: 'usd',
-                    product_data: { name: item.name },
-                    unit_amount: Math.round(Number(item.price) * 100),
-                },
-                quantity: Number(item.quantity),
-            })),
+            line_items: lineItems,
 
             automatic_tax: { enabled: true },
 
@@ -192,12 +220,13 @@ app.post('/create-checkout-session', async (req, res) => {
         res.json({ url: session.url });
 
     } catch (error) {
-        console.error("❌ Stripe error:", error);
-        res.status(500).json({ error: error.message });
+        console.error("❌ Stripe error:", error.message);
+        res.status(400).json({ error: error.message });
     }
 });
 
-// 💵 COD ORDER (FIXED)
+
+// 💵 COD ORDER
 app.post('/create-cod-order', async (req, res) => {
     const { items, userId, address } = req.body;
 
@@ -206,13 +235,13 @@ app.post('/create-cod-order', async (req, res) => {
     }
 
     try {
-        const total = calculateTotal(items); // ✅ FIX
+        const total = calculateTotal(items);
 
         const orderRef = await db.collection('orders').add({
             userId,
             items,
             address,
-            amount: total, // ✅ NOW CORRECT
+            amount: total,
             status: 'Order Placed (COD)',
             paymentMethod: 'COD',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -225,6 +254,7 @@ app.post('/create-cod-order', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
 
 // 🔄 UPDATE ORDER
 app.post('/update-order-status', verifyToken, async (req, res) => {
@@ -248,7 +278,8 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
     }
 });
 
-// 🚀 START
+
+// 🚀 START SERVER
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, '0.0.0.0', () => {
