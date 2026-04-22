@@ -225,7 +225,7 @@ const Checkout = ({ cart, setCart }) => {
             </div>
 
             <div className="input__title--container">
-                <h4>Delivery Information</h4>
+                <h4 className="input__title">Delivery Information</h4>
             </div>
 
             <div className="input_container">
@@ -239,7 +239,7 @@ const Checkout = ({ cart, setCart }) => {
                 <input name="zipCode" value={addressData.zipCode} onChange={onChangeHandler} placeholder="Zip Code" />
             </div>
 
-            <h4>Select Payment Method</h4>
+            <h4 className="payment__method--title">Select Payment Method</h4>
 
             <div className="payment__method__container">
                 <img
