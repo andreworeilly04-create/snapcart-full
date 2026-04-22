@@ -145,7 +145,7 @@ app.use(express.json());
 // 💰 HELPER: CALCULATE TOTAL
 const calculateTotal = (items) => {
     return items.reduce((total, item) => {
-        return total = (Number(item.price) + (Number(item.shipping) + (Number(item.tax) * Number(item.quantity));
+        return total + (Number(item.price) * Number(item.quantity));
     }, 0);
 };
 
@@ -178,7 +178,7 @@ app.post('/create-checkout-session', async (req, res) => {
             userId,
             items,
             address,
-            status: 'Canceled',
+            status: 'Pending Payment',
             paymentMethod: 'stripe',
             amount: total,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -239,7 +239,7 @@ app.post('/create-cod-order', async (req, res) => {
             items,
             address,
             amount: total,
-            status: 'Payment Pending',
+            status: 'Order Placed (COD)',
             paymentMethod: 'COD',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
