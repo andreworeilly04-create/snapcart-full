@@ -28,13 +28,13 @@ const Checkout = ({ cart, setCart }) => {
     };
 
     // =========================
-    // 🔥 FIXED TOTAL (NO UI CHANGE)
+    // SAFE TOTAL CALC
     // =========================
     const subtotal = cart.reduce((acc, item) => {
         const price = Number(item.price);
         const qty = Number(item.quantity);
 
-        if (isNaN(price) || isNaN(qty)) return acc;
+        if (!Number.isFinite(price) || !Number.isFinite(qty)) return acc;
 
         return acc + (price * qty);
     }, 0);
@@ -91,23 +91,36 @@ const Checkout = ({ cart, setCart }) => {
         }
 
         // =========================
-        // 🔥 CLEAN CART (FIXES STRIPE BUG)
+        // FIXED CART CLEANING (IMPORTANT)
         // =========================
-        const cleanedCart = cart.map(item => ({
-            ...item,
-            price: Number(item.price) || 0,
-            quantity: Number(item.quantity) || 0
-        }));
+        const cleanedCart = cart
+            .map(item => ({
+                name: item.name,
+                price: Number(item.price),
+                quantity: Number(item.quantity)
+            }))
+            .filter(item =>
+                item.name &&
+                Number.isFinite(item.price) &&
+                Number.isFinite(item.quantity) &&
+                item.price > 0 &&
+                item.quantity > 0
+            );
+
+        if (cleanedCart.length === 0) {
+            toast.error("Cart is empty or invalid");
+            return;
+        }
+
+        const API_BASE_URL =
+            process.env.REACT_APP_API_URL ||
+            'https://snapcart-full-4.onrender.com';
 
         // =========================
-        // 💵 COD
+        // COD
         // =========================
         if (paymentMethod === 'COD') {
             try {
-                const API_BASE_URL =
-                    process.env.REACT_APP_API_URL ||
-                    'https://snapcart-full-4.onrender.com';
-
                 const response = await fetch(`${API_BASE_URL}/create-cod-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -137,14 +150,10 @@ const Checkout = ({ cart, setCart }) => {
         }
 
         // =========================
-        // 💳 STRIPE
+        // STRIPE
         // =========================
         else if (paymentMethod === 'stripe') {
             try {
-                const API_BASE_URL =
-                    process.env.REACT_APP_API_URL ||
-                    'https://snapcart-full-4.onrender.com';
-
                 const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -155,18 +164,17 @@ const Checkout = ({ cart, setCart }) => {
                     }),
                 });
 
+                const data = await response.json();
+
                 if (!response.ok) {
-                    const text = await response.text();
-                    throw new Error(text || "Stripe failed");
+                    throw new Error(data.error || "Stripe failed");
                 }
 
-                const session = await response.json();
-
-                if (!session.url) {
+                if (!data.url) {
                     throw new Error("No Stripe URL returned");
                 }
 
-                window.location.href = session.url;
+                window.location.href = data.url;
 
             } catch (error) {
                 console.error("STRIPE ERROR:", error);
