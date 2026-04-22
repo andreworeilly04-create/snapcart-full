@@ -110,6 +110,8 @@
     flex-direction:column;
     margin:0 auto;
     transition:all 300ms ease;
+    color:black;
+    font-weight:bold;
 }
 
 .dark .cart-summary--checkout{
