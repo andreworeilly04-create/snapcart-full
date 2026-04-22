@@ -83,7 +83,7 @@ const Checkout = ({ cart, setCart }) => {
 
         const orderData = {
             items: cart,
-            total: cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+            total: cart.reduce((acc, item) => acc + item.price + item.shipping + item.tax * item.quantity, 0),
             createdAt: serverTimestamp(),
             status: 'Processing',
             user: currentUser.uid,
