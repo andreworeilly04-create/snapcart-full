@@ -210,9 +210,9 @@ const Checkout = ({ cart, setCart }) => {
                                 )}
 
                                 <div className="quantity-controls">
-                                    <button onClick={() => updateQuantity(item.id, -1, item.size)}>-</button>
+                                    <button className="qty-btn" onClick={() => updateQuantity(item.id, -1, item.size)}>-</button>
                                     <span>{item.quantity}</span>
-                                    <button onClick={() => updateQuantity(item.id, 1, item.size)}>+</button>
+                                    <button className="qty-btn" onClick={() => updateQuantity(item.id, 1, item.size)}>+</button>
                                 </div>
                             </div>
 
@@ -268,7 +268,7 @@ const Checkout = ({ cart, setCart }) => {
                     <strong>Total: ${total.toFixed(2)}</strong>
                 </div>
 
-                <button onClick={handleCheckout}>
+                <button className="checkout_btn" onClick={handleCheckout}>
                     Place Order
                 </button>
             </div>
