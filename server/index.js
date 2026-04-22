@@ -5,7 +5,9 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccountKey.json');
 
-// 🔥 ENV CHECK
+// ======================
+// ENV CHECK
+// ======================
 if (!process.env.STRIPE_SECRET_KEY) {
     console.error("❌ Missing STRIPE_SECRET_KEY");
     process.exit(1);
@@ -18,7 +20,10 @@ if (!process.env.STRIPE_WEBHOOK_SECRET) {
 
 const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
 
-// 🔥 FIREBASE INIT
+
+// ======================
+// FIREBASE INIT
+// ======================
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -28,7 +33,7 @@ const app = express();
 
 
 // ======================
-// CORS
+// MIDDLEWARE ORDER FIXED
 // ======================
 app.use(cors({
     origin: (origin, callback) => {
@@ -40,6 +45,9 @@ app.use(cors({
     },
     credentials: true
 }));
+
+// IMPORTANT: JSON middleware FIRST
+app.use(express.json());
 
 
 // ======================
@@ -69,7 +77,7 @@ const verifyToken = async (req, res, next) => {
 
 
 // ======================
-// STRIPE WEBHOOK (ROBUST)
+// STRIPE WEBHOOK (SAFE + ROBUST)
 // ======================
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -87,46 +95,52 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         return res.status(400).send("Webhook Error");
     }
 
-    console.log("📡 WEBHOOK EVENT:", event.type);
+    console.log("📡 EVENT:", event.type);
 
     try {
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
 
-            console.log("🔥 WEBHOOK TRIGGERED");
-            console.log("🧾 SESSION ID:", session.id);
-            console.log("📦 METADATA:", session.metadata);
+            console.log("🔥 SESSION:", session.id);
 
-            // 🔥 Prevent duplicates
+            // Prevent duplicate orders
             const existing = await db.collection('orders')
                 .where('stripeSessionId', '==', session.id)
                 .limit(1)
                 .get();
 
             if (!existing.empty) {
-                console.log("⚠️ Duplicate order ignored");
+                console.log("⚠️ Duplicate order skipped");
                 return res.json({ received: true });
             }
 
-            // 🔥 SAFE PARSE
+            // Safe metadata parsing
             let items = [];
             let address = {};
 
             try {
-                items = session.metadata.items ? JSON.parse(session.metadata.items) : [];
-                address = session.metadata.address ? JSON.parse(session.metadata.address) : {};
+                items = session.metadata?.items
+                    ? JSON.parse(session.metadata.items)
+                    : [];
+
+                address = session.metadata?.address
+                    ? JSON.parse(session.metadata.address)
+                    : {};
             } catch (e) {
                 console.error("❌ Metadata parse error:", e.message);
             }
 
-            const userId = session.metadata.userId || "guest";
+            const userId = session.metadata?.userId || "guest";
 
-            // 🔥 CREATE ORDER
+            const amount = session.amount_total
+                ? session.amount_total / 100
+                : 0;
+
             const orderRef = await db.collection('orders').add({
                 userId,
                 items,
                 address,
-                amount: session.amount_total / 100,
+                amount,
                 status: 'Paid',
                 paymentMethod: 'stripe',
                 stripeSessionId: session.id,
@@ -146,41 +160,33 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
 
 // ======================
-// JSON MIDDLEWARE (AFTER WEBHOOK)
-// ======================
-app.use(express.json());
-
-
-// ======================
-// STRIPE CHECKOUT SESSION (DEBUGGED)
+// STRIPE CHECKOUT SESSION (FIXED)
 // ======================
 app.post('/create-checkout-session', async (req, res) => {
     try {
         const { items, userId, address } = req.body;
 
-        console.log("🧾 REQUEST RECEIVED:", req.body);
+        console.log("🧾 REQUEST:", req.body);
 
         if (!Array.isArray(items) || items.length === 0) {
-            return res.status(400).json({ error: "Cart is empty or invalid" });
+            return res.status(400).json({ error: "Cart is empty" });
         }
 
         if (!userId || !address) {
             return res.status(400).json({ error: "Missing userId or address" });
         }
 
-        // 🔥 VALIDATE CART
-        const line_items = items.map((item, i) => {
+        // STRICT VALIDATION
+        const line_items = items.map((item) => {
             const price = Number(item.price);
             const quantity = Number(item.quantity);
 
-            console.log(`🔍 ITEM ${i}:`, item);
-
-            if (isNaN(price) || price <= 0) {
-                throw new Error(`Invalid price: ${JSON.stringify(item)}`);
+            if (!price || price <= 0) {
+                throw new Error("Invalid price in cart");
             }
 
-            if (isNaN(quantity) || quantity <= 0) {
-                throw new Error(`Invalid quantity: ${JSON.stringify(item)}`);
+            if (!quantity || quantity <= 0) {
+                throw new Error("Invalid quantity in cart");
             }
 
             return {
@@ -195,7 +201,6 @@ app.post('/create-checkout-session', async (req, res) => {
             };
         });
 
-        // 🔥 CREATE STRIPE SESSION
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
@@ -214,14 +219,11 @@ app.post('/create-checkout-session', async (req, res) => {
 
         console.log("✅ STRIPE SESSION CREATED:", session.id);
 
-        return res.json({ url: session.url });
+        res.json({ url: session.url });
 
     } catch (error) {
-        console.error("❌ STRIPE CHECKOUT ERROR:", error.message);
-
-        return res.status(500).json({
-            error: error.message
-        });
+        console.error("❌ STRIPE ERROR:", error.message);
+        res.status(500).json({ error: error.message });
     }
 });
 
