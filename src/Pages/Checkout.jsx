@@ -27,54 +27,74 @@ const Checkout = ({ cart, setCart }) => {
         setAddressData(prev => ({ ...prev, [name]: value }));
     };
 
-    const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const shipping = cart.length > 0 ? 5.99 : 0;
     const tax = subtotal * 0.10;
     const total = subtotal + shipping + tax;
 
+    const updateQuantity = (id, change, size) => {
+        const updatedCart = cart.map((item) =>
+            item.id === id && item.size === size
+                ? { ...item, quantity: Math.max(1, item.quantity + change) }
+                : item
+        );
+
+        setCart(updatedCart);
+        localStorage.setItem('snapcart_items', JSON.stringify(updatedCart));
+    };
+
+    const removeFromCart = (itemObject) => {
+        const updatedCart = cart.filter(
+            item => item.id !== itemObject.id || item.size !== itemObject.size
+        );
+
+        setCart(updatedCart);
+        localStorage.setItem('snapcart_items', JSON.stringify(updatedCart));
+    };
+
     const handleCheckout = async (e) => {
         e.preventDefault();
 
-        const user = auth.currentUser;
+        const currentUser = auth.currentUser;
 
-        if (!user) {
-            toast.error("You must be logged in");
+        if (!currentUser) {
+            toast.error("You must be logged in to place an order!");
             return;
         }
 
         if (!paymentMethod) {
-            toast.error("Select a payment method");
+            toast.error("Please select a payment method");
             return;
         }
 
         const { address, city, state, zipCode, firstName, lastName } = addressData;
 
         if (!address || !city || !state || !zipCode || !firstName || !lastName) {
-            toast.error("Fill all required fields");
+            toast.error("Please fill in all fields");
             return;
         }
 
-        const API = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com';
+        const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com';
 
         // ======================
-        // COD FLOW
+        // COD
         // ======================
         if (paymentMethod === 'COD') {
             try {
-                const res = await fetch(`${API}/create-cod-order`, {
+                const response = await fetch(`${API_BASE_URL}/create-cod-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         items: cart,
-                        userId: user.uid,
+                        userId: currentUser.uid,
                         address: addressData
-                    })
+                    }),
                 });
 
-                const data = await res.json();
+                const data = await response.json();
 
-                if (!res.ok) {
-                    toast.error(data.error || "COD failed");
+                if (!response.ok) {
+                    toast.error(data.error || "COD order failed");
                     return;
                 }
 
@@ -84,44 +104,44 @@ const Checkout = ({ cart, setCart }) => {
                 toast.success("Order placed successfully (COD)");
                 navigate('/orders');
 
-            } catch (err) {
-                console.error(err);
+            } catch (error) {
+                console.error(error);
                 toast.error("COD error occurred");
             }
         }
 
         // ======================
-        // STRIPE FLOW
+        // STRIPE
         // ======================
         else if (paymentMethod === 'stripe') {
             try {
-                const res = await fetch(`${API}/create-checkout-session`, {
+                const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         items: cart,
-                        userId: user.uid,
+                        userId: currentUser.uid,
                         address: addressData
-                    })
+                    }),
                 });
 
-                const data = await res.json();
+                const session = await response.json();
 
-                if (!res.ok) {
-                    toast.error(data.error || "Stripe request failed");
+                if (!response.ok) {
+                    toast.error(session.error || "Stripe failed");
                     return;
                 }
 
-                if (!data.url) {
-                    toast.error("Stripe session missing URL");
+                if (!session.url) {
+                    toast.error("Stripe session URL missing");
                     return;
                 }
 
-                // IMPORTANT: do NOT clear cart here
-                window.location.href = data.url;
+                // DO NOT clear cart
+                window.location.href = session.url;
 
-            } catch (err) {
-                console.error(err);
+            } catch (error) {
+                console.error(error);
                 toast.error("Stripe checkout failed");
             }
         }
@@ -144,7 +164,22 @@ const Checkout = ({ cart, setCart }) => {
 
                             <div>
                                 <h4 className="item_name">{item.name}</h4>
+
                                 {item.size && <p className="item_size">Size: {item.size}</p>}
+
+                                <div className="quantity-controls">
+                                    <button
+                                        className="qty-btn"
+                                        onClick={() => updateQuantity(item.id, -1, item.size)}
+                                    >-</button>
+
+                                    <span className="qty-number">{item.quantity}</span>
+
+                                    <button
+                                        className="qty-btn"
+                                        onClick={() => updateQuantity(item.id, 1, item.size)}
+                                    >+</button>
+                                </div>
 
                                 <p className="item_quantity">Quantity: {item.quantity}</p>
                             </div>
@@ -159,18 +194,24 @@ const Checkout = ({ cart, setCart }) => {
             </div>
 
             {/* DELIVERY INFO */}
+            <div className="input__title--container">
+                <h4 className="input__title">Delivery Information</h4>
+            </div>
+
             <div className="input_container">
-                <input onChange={onChangeHandler} name="firstName" value={addressData.firstName} placeholder="First Name" />
-                <input onChange={onChangeHandler} name="lastName" value={addressData.lastName} placeholder="Last Name" />
-                <input onChange={onChangeHandler} name="email" value={addressData.email} placeholder="Email" />
-                <input onChange={onChangeHandler} name="address" value={addressData.address} placeholder="Address" />
-                <input onChange={onChangeHandler} name="city" value={addressData.city} placeholder="City" />
-                <input onChange={onChangeHandler} name="state" value={addressData.state} placeholder="State" />
-                <input onChange={onChangeHandler} name="country" value={addressData.country} placeholder="Country" />
-                <input onChange={onChangeHandler} name="zipCode" value={addressData.zipCode} placeholder="Zip Code" />
+                <input onChange={onChangeHandler} name='firstName' value={addressData.firstName} type="text" placeholder="First Name" required />
+                <input onChange={onChangeHandler} name='lastName' value={addressData.lastName} type="text" placeholder="Last Name" required />
+                <input onChange={onChangeHandler} name='email' value={addressData.email} type="email" placeholder="Email" required />
+                <input onChange={onChangeHandler} name='address' value={addressData.address} type="text" placeholder="Address" required />
+                <input onChange={onChangeHandler} name='city' value={addressData.city} type="text" placeholder="City" required />
+                <input onChange={onChangeHandler} name='state' value={addressData.state} type="text" placeholder="State" required />
+                <input onChange={onChangeHandler} name='country' value={addressData.country} type="text" placeholder="Country" required />
+                <input onChange={onChangeHandler} name='zipCode' value={addressData.zipCode} type="number" placeholder="Zip Code" required />
             </div>
 
             {/* PAYMENT METHOD */}
+            <h4 className="payment__method--title">Select Payment Method</h4>
+
             <figure className="payment__method__container">
                 <img
                     className={`stripe ${paymentMethod === 'stripe' ? 'selected' : ''}`}
@@ -183,7 +224,7 @@ const Checkout = ({ cart, setCart }) => {
                     className={`COD ${paymentMethod === 'COD' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('COD')}
                     src={COD}
-                    alt="COD"
+                    alt="Cash on Delivery"
                 />
             </figure>
 
