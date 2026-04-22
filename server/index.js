@@ -41,10 +41,9 @@ app.use(cors({
 }));
 
 // ======================
-// BODY PARSER
+// JSON BODY PARSER
 // ======================
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // ======================
 // HEALTH CHECK
@@ -55,62 +54,9 @@ app.get('/', (req, res) => {
 
 
 // ======================================================
-// 🔥 STRIPE WEBHOOK (FINAL FIXED)
-// ======================================================
-app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-
-    const sig = req.headers['stripe-signature'];
-
-    let event;
-
-    try {
-        event = stripe.webhooks.constructEvent(
-            req.body,
-            sig,
-            process.env.STRIPE_WEBHOOK_SECRET
-        );
-    } catch (err) {
-        console.error("❌ Webhook error:", err.message);
-        return res.status(400).send("Webhook Error");
-    }
-
-    console.log("🔥 WEBHOOK EVENT:", event.type);
-
-    if (event.type === 'checkout.session.completed') {
-        const session = event.data.object;
-
-        const orderId = session.metadata?.orderId;
-
-        if (!orderId) {
-            console.log("❌ Missing orderId in metadata");
-            return res.json({ received: true });
-        }
-
-        try {
-            await db.collection('orders').doc(orderId).update({
-                status: "Paid",
-                stripeSessionId: session.id,
-                paymentMethod: "Stripe",
-                amount: (session.amount_total || 0) / 100,
-                paidAt: admin.firestore.FieldValue.serverTimestamp()
-            });
-
-            console.log("✅ ORDER UPDATED:", orderId);
-
-        } catch (err) {
-            console.error("❌ ORDER UPDATE ERROR:", err);
-        }
-    }
-
-    res.json({ received: true });
-});
-
-
-// ======================================================
-// 💳 CREATE STRIPE SESSION (FIXED + SAFE)
+// 💳 CREATE STRIPE SESSION (ORDER = PENDING)
 // ======================================================
 app.post('/create-checkout-session', async (req, res) => {
-
     try {
         const { items, userId, address } = req.body;
 
@@ -122,15 +68,15 @@ app.post('/create-checkout-session', async (req, res) => {
             return res.status(400).json({ error: "Missing userId" });
         }
 
-        // ======================
-        // FIX NaN ISSUE
-        // ======================
+        // ✅ FIX NAN ISSUES
         const cleanItems = items.map(item => ({
             name: item.name || "Product",
             price: Number(item.price) || 0,
-            quantity: Number(item.quantity) || 1
+            quantity: Number(item.quantity) || 1,
+            image: item.image || ""
         }));
 
+        // ✅ TOTAL
         const total = cleanItems.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0
@@ -139,7 +85,7 @@ app.post('/create-checkout-session', async (req, res) => {
         console.log("💰 TOTAL:", total);
 
         // ======================
-        // CREATE ORDER FIRST
+        // CREATE ORDER FIRST (PENDING)
         // ======================
         const orderRef = await db.collection('orders').add({
             userId,
@@ -164,7 +110,8 @@ app.post('/create-checkout-session', async (req, res) => {
                 price_data: {
                     currency: 'usd',
                     product_data: {
-                        name: item.name
+                        name: item.name,
+                        images: item.image ? [item.image] : []
                     },
                     unit_amount: Math.round(item.price * 100),
                 },
@@ -174,12 +121,11 @@ app.post('/create-checkout-session', async (req, res) => {
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
 
+            // IMPORTANT
             metadata: {
                 orderId: orderRef.id
             }
         });
-
-        console.log("✅ STRIPE SESSION CREATED:", session.id);
 
         res.json({ url: session.url });
 
@@ -191,10 +137,62 @@ app.post('/create-checkout-session', async (req, res) => {
 
 
 // ======================================================
-// 💵 COD ORDER (FIXED NaN)
+// 🔥 STRIPE WEBHOOK (MARK ORDER AS PAID)
+// ======================================================
+app.post(
+    '/webhook',
+    express.raw({ type: 'application/json' }),
+    async (req, res) => {
+
+        const sig = req.headers['stripe-signature'];
+
+        let event;
+
+        try {
+            event = stripe.webhooks.constructEvent(
+                req.body,
+                sig,
+                process.env.STRIPE_WEBHOOK_SECRET
+            );
+        } catch (err) {
+            console.error("❌ Webhook error:", err.message);
+            return res.status(400).send("Webhook Error");
+        }
+
+        if (event.type === 'checkout.session.completed') {
+            const session = event.data.object;
+
+            const orderId = session.metadata?.orderId;
+
+            if (!orderId) {
+                console.log("❌ Missing orderId");
+                return res.json({ received: true });
+            }
+
+            try {
+                await db.collection('orders').doc(orderId).update({
+                    status: "Paid",
+                    stripeSessionId: session.id,
+                    paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                    amount: (session.amount_total || 0) / 100
+                });
+
+                console.log("✅ ORDER MARKED PAID:", orderId);
+
+            } catch (err) {
+                console.error("❌ UPDATE ERROR:", err);
+            }
+        }
+
+        res.json({ received: true });
+    }
+);
+
+
+// ======================================================
+// 💵 COD ORDER (UNCHANGED)
 // ======================================================
 app.post('/create-cod-order', async (req, res) => {
-
     try {
         const { items, userId, address } = req.body;
 
