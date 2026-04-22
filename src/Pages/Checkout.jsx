@@ -118,7 +118,8 @@ const Checkout = ({ cart, setCart }) => {
                     return;
                 }
 
-                // DO NOT clear cart here (Stripe redirect)
+                // ⚠️ DO NOT clear cart here
+                // Stripe handles payment first, webhook updates order
                 window.location.href = data.url;
 
             } catch (err) {
@@ -131,19 +132,35 @@ const Checkout = ({ cart, setCart }) => {
     return (
         <section id="checkout">
 
-            <h3 className="checkout__title">Checkout</h3>
-
-            {/* CART */}
-            <div>
-                {cart.map(item => (
-                    <div key={`${item.id}-${item.size}`}>
-                        <p>{item.name} x {item.quantity}</p>
-                    </div>
-                ))}
+            <div className="checkout__title--container">
+                <h3 className="checkout__title">Checkout</h3>
             </div>
 
-            {/* ADDRESS */}
-            <div>
+            {/* CART ITEMS */}
+            <div className="cart__container">
+                <div className="card-details">
+                    {cart.map((item) => (
+                        <div key={`${item.id}-${item.size}`} className="cart__item-card">
+
+                            <img className="cart-item-image" src={item.image} alt={item.name} />
+
+                            <div>
+                                <h4 className="item_name">{item.name}</h4>
+                                {item.size && <p className="item_size">Size: {item.size}</p>}
+                                <p className="item_quantity">Qty: {item.quantity}</p>
+                            </div>
+
+                            <span className="item_price">
+                                ${(item.price * item.quantity).toFixed(2)}
+                            </span>
+
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* DELIVERY INFO */}
+            <div className="input_container">
                 <input name="firstName" value={addressData.firstName} onChange={onChangeHandler} placeholder="First Name" />
                 <input name="lastName" value={addressData.lastName} onChange={onChangeHandler} placeholder="Last Name" />
                 <input name="email" value={addressData.email} onChange={onChangeHandler} placeholder="Email" />
@@ -154,31 +171,51 @@ const Checkout = ({ cart, setCart }) => {
                 <input name="zipCode" value={addressData.zipCode} onChange={onChangeHandler} placeholder="Zip Code" />
             </div>
 
-            {/* PAYMENT */}
-            <div>
+            {/* PAYMENT METHOD */}
+            <figure className="payment__method__container">
                 <img
                     src={StripeImg}
                     alt="stripe"
                     onClick={() => setPaymentMethod('stripe')}
-                    style={{ border: paymentMethod === 'stripe' ? '2px solid green' : '' }}
+                    className={paymentMethod === 'stripe' ? 'selected' : ''}
                 />
 
                 <img
                     src={COD}
                     alt="cod"
                     onClick={() => setPaymentMethod('COD')}
-                    style={{ border: paymentMethod === 'COD' ? '2px solid green' : '' }}
+                    className={paymentMethod === 'COD' ? 'selected' : ''}
                 />
-            </div>
+            </figure>
 
             {/* SUMMARY */}
-            <div>
-                <p>Total: ${total.toFixed(2)}</p>
-            </div>
+            <div className="cart-summary--checkout">
+                <h3 className="order_summary">Order Summary</h3>
 
-            <button onClick={handleCheckout}>
-                Place Order
-            </button>
+                <div className="summary-line">
+                    <span>Subtotal:</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                </div>
+
+                <div className="summary-line">
+                    <span>Shipping:</span>
+                    <span>${shipping.toFixed(2)}</span>
+                </div>
+
+                <div className="summary-line">
+                    <span>Tax:</span>
+                    <span>${tax.toFixed(2)}</span>
+                </div>
+
+                <div className="summary-line--total">
+                    <span>Total:</span>
+                    <span>${total.toFixed(2)}</span>
+                </div>
+
+                <button className="checkout_btn" onClick={handleCheckout}>
+                    Place Order
+                </button>
+            </div>
 
         </section>
     );
