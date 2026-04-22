@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import { auth } from '../Firebase';
 
 const Checkout = ({ cart, setCart }) => {
+
     const navigate = useNavigate();
     const [paymentMethod, setPaymentMethod] = useState("");
 
@@ -21,8 +22,8 @@ const Checkout = ({ cart, setCart }) => {
         zipCode: '',
     });
 
-    const onChangeHandler = (e) => {
-        const { name, value } = e.target;
+    const onChangeHandler = (event) => {
+        const { name, value } = event.target;
         setAddressData(prev => ({ ...prev, [name]: value }));
     };
 
@@ -80,7 +81,7 @@ const Checkout = ({ cart, setCart }) => {
                 localStorage.removeItem('snapcart_items');
                 setCart([]);
 
-                toast.success("COD order placed");
+                toast.success("Order placed successfully (COD)");
                 navigate('/orders');
 
             } catch (err) {
@@ -106,8 +107,6 @@ const Checkout = ({ cart, setCart }) => {
 
                 const data = await res.json();
 
-                console.log("Stripe response:", data);
-
                 if (!res.ok) {
                     toast.error(data.error || "Stripe request failed");
                     return;
@@ -118,8 +117,7 @@ const Checkout = ({ cart, setCart }) => {
                     return;
                 }
 
-                // ⚠️ DO NOT clear cart here
-                // Stripe handles payment first, webhook updates order
+                // IMPORTANT: do NOT clear cart here
                 window.location.href = data.url;
 
             } catch (err) {
@@ -147,7 +145,8 @@ const Checkout = ({ cart, setCart }) => {
                             <div>
                                 <h4 className="item_name">{item.name}</h4>
                                 {item.size && <p className="item_size">Size: {item.size}</p>}
-                                <p className="item_quantity">Qty: {item.quantity}</p>
+
+                                <p className="item_quantity">Quantity: {item.quantity}</p>
                             </div>
 
                             <span className="item_price">
@@ -161,39 +160,39 @@ const Checkout = ({ cart, setCart }) => {
 
             {/* DELIVERY INFO */}
             <div className="input_container">
-                <input name="firstName" value={addressData.firstName} onChange={onChangeHandler} placeholder="First Name" />
-                <input name="lastName" value={addressData.lastName} onChange={onChangeHandler} placeholder="Last Name" />
-                <input name="email" value={addressData.email} onChange={onChangeHandler} placeholder="Email" />
-                <input name="address" value={addressData.address} onChange={onChangeHandler} placeholder="Address" />
-                <input name="city" value={addressData.city} onChange={onChangeHandler} placeholder="City" />
-                <input name="state" value={addressData.state} onChange={onChangeHandler} placeholder="State" />
-                <input name="country" value={addressData.country} onChange={onChangeHandler} placeholder="Country" />
-                <input name="zipCode" value={addressData.zipCode} onChange={onChangeHandler} placeholder="Zip Code" />
+                <input onChange={onChangeHandler} name="firstName" value={addressData.firstName} placeholder="First Name" />
+                <input onChange={onChangeHandler} name="lastName" value={addressData.lastName} placeholder="Last Name" />
+                <input onChange={onChangeHandler} name="email" value={addressData.email} placeholder="Email" />
+                <input onChange={onChangeHandler} name="address" value={addressData.address} placeholder="Address" />
+                <input onChange={onChangeHandler} name="city" value={addressData.city} placeholder="City" />
+                <input onChange={onChangeHandler} name="state" value={addressData.state} placeholder="State" />
+                <input onChange={onChangeHandler} name="country" value={addressData.country} placeholder="Country" />
+                <input onChange={onChangeHandler} name="zipCode" value={addressData.zipCode} placeholder="Zip Code" />
             </div>
 
             {/* PAYMENT METHOD */}
             <figure className="payment__method__container">
                 <img
-                    src={StripeImg}
-                    alt="stripe"
+                    className={`stripe ${paymentMethod === 'stripe' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('stripe')}
-                    className={paymentMethod === 'stripe' ? 'selected' : ''}
+                    src={StripeImg}
+                    alt="Stripe"
                 />
 
                 <img
-                    src={COD}
-                    alt="cod"
+                    className={`COD ${paymentMethod === 'COD' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('COD')}
-                    className={paymentMethod === 'COD' ? 'selected' : ''}
+                    src={COD}
+                    alt="COD"
                 />
             </figure>
 
-            {/* SUMMARY */}
+            {/* ORDER SUMMARY */}
             <div className="cart-summary--checkout">
                 <h3 className="order_summary">Order Summary</h3>
 
                 <div className="summary-line">
-                    <span>Subtotal:</span>
+                    <span>Price:</span>
                     <span>${subtotal.toFixed(2)}</span>
                 </div>
 
@@ -212,7 +211,7 @@ const Checkout = ({ cart, setCart }) => {
                     <span>${total.toFixed(2)}</span>
                 </div>
 
-                <button className="checkout_btn" onClick={handleCheckout}>
+                <button onClick={handleCheckout} className="checkout_btn">
                     Place Order
                 </button>
             </div>
