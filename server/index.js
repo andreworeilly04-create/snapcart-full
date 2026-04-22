@@ -47,16 +47,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ======================
-// HEALTH
+// HEALTH CHECK
 // ======================
 app.get('/', (req, res) => {
     res.send('Server running');
 });
 
 
-// ======================
-// STRIPE WEBHOOK (FIXED + SAFE)
-// ======================
+// ======================================================
+// 🔥 STRIPE WEBHOOK (FINAL FIXED)
+// ======================================================
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
 
     const sig = req.headers['stripe-signature'];
@@ -74,20 +74,19 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         return res.status(400).send("Webhook Error");
     }
 
-    console.log("🔥 EVENT:", event.type);
+    console.log("🔥 WEBHOOK EVENT:", event.type);
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
 
+        const orderId = session.metadata?.orderId;
+
+        if (!orderId) {
+            console.log("❌ Missing orderId in metadata");
+            return res.json({ received: true });
+        }
+
         try {
-            const orderId = session.metadata?.orderId;
-
-            if (!orderId) {
-                console.log("❌ Missing orderId in metadata");
-                return res.json({ received: true });
-            }
-
-            // 🔥 UPDATE ORDER SAFELY
             await db.collection('orders').doc(orderId).update({
                 status: "Paid",
                 stripeSessionId: session.id,
@@ -107,9 +106,9 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 });
 
 
-// ======================
-// STRIPE SESSION
-// ======================
+// ======================================================
+// 💳 CREATE STRIPE SESSION (FIXED + SAFE)
+// ======================================================
 app.post('/create-checkout-session', async (req, res) => {
 
     try {
@@ -124,24 +123,20 @@ app.post('/create-checkout-session', async (req, res) => {
         }
 
         // ======================
-        // FIXED SAFE TOTAL CHECK (DEBUGGING HELP)
+        // FIX NaN ISSUE
         // ======================
         const cleanItems = items.map(item => ({
-            ...item,
+            name: item.name || "Product",
             price: Number(item.price) || 0,
             quantity: Number(item.quantity) || 1
         }));
 
-        const line_items = cleanItems.map(item => ({
-            price_data: {
-                currency: 'usd',
-                product_data: {
-                    name: item.name || "Product"
-                },
-                unit_amount: Math.round(item.price * 100),
-            },
-            quantity: item.quantity
-        }));
+        const total = cleanItems.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+        );
+
+        console.log("💰 TOTAL:", total);
 
         // ======================
         // CREATE ORDER FIRST
@@ -150,6 +145,7 @@ app.post('/create-checkout-session', async (req, res) => {
             userId,
             items: cleanItems,
             address,
+            amount: total,
             status: "Pending Payment",
             paymentMethod: "Stripe",
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -164,7 +160,16 @@ app.post('/create-checkout-session', async (req, res) => {
             payment_method_types: ['card'],
             mode: 'payment',
 
-            line_items,
+            line_items: cleanItems.map(item => ({
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: item.name
+                    },
+                    unit_amount: Math.round(item.price * 100),
+                },
+                quantity: item.quantity
+            })),
 
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
@@ -174,7 +179,7 @@ app.post('/create-checkout-session', async (req, res) => {
             }
         });
 
-        console.log("✅ STRIPE SESSION:", session.id);
+        console.log("✅ STRIPE SESSION CREATED:", session.id);
 
         res.json({ url: session.url });
 
@@ -185,16 +190,16 @@ app.post('/create-checkout-session', async (req, res) => {
 });
 
 
-// ======================
-// COD ORDER (FIXED NaN)
-// ======================
+// ======================================================
+// 💵 COD ORDER (FIXED NaN)
+// ======================================================
 app.post('/create-cod-order', async (req, res) => {
 
     try {
         const { items, userId, address } = req.body;
 
         const cleanItems = items.map(item => ({
-            ...item,
+            name: item.name || "Product",
             price: Number(item.price) || 0,
             quantity: Number(item.quantity) || 1
         }));
