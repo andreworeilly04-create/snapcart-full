@@ -4,11 +4,10 @@ import StripeImg from '../assets/stripe.png';
 import COD from '../assets/cash_on_delivery.png';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { auth, db } from '../Firebase';
-import { collection, serverTimestamp, } from 'firebase/firestore';
+import { auth } from '../Firebase';
+import { serverTimestamp } from 'firebase/firestore';
 
 const Checkout = ({ cart, setCart }) => {
-
     const navigate = useNavigate();
 
     const [paymentMethod, setPaymentMethod] = useState("");
@@ -25,16 +24,18 @@ const Checkout = ({ cart, setCart }) => {
     });
 
     const onChangeHandler = (event) => {
-        const name = event.target.name;
-        const value = event.target.value;
-        setAddressData(data => ({ ...data, [name]: value }))
+        const { name, value } = event.target;
+        setAddressData(data => ({ ...data, [name]: value }));
     };
 
-    const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    // ✅ DISPLAY TOTAL ONLY
+    const subtotal = cart.reduce(
+        (acc, item) => acc + (Number(item.price) * Number(item.quantity)),
+        0
+    );
     const shipping = cart.length > 0 ? 5.99 : 0;
     const tax = subtotal * 0.10;
     const total = subtotal + shipping + tax;
-
 
     const updateQuantity = (id, change, size) => {
         const updatedCart = cart.map((item) =>
@@ -56,8 +57,8 @@ const Checkout = ({ cart, setCart }) => {
         localStorage.setItem('snapcart_items', JSON.stringify(updatedCart));
     };
 
-    const handleCheckout = async (error) => {
-        error.preventDefault();
+    const handleCheckout = async (e) => {
+        e.preventDefault();
 
         const currentUser = auth.currentUser;
 
@@ -66,94 +67,114 @@ const Checkout = ({ cart, setCart }) => {
             return;
         }
 
-
         if (!paymentMethod) {
             toast.error("Please select a payment method");
             return;
         }
 
-
-        const { address, city, state, zipCode, firstName, lastName } = addressData;
-
-
-        if (!addressData.address || !addressData.city || !addressData.state || !addressData.zipCode || !addressData.firstName || !addressData.lastName) {
+        if (
+            !addressData.address ||
+            !addressData.city ||
+            !addressData.state ||
+            !addressData.zipCode ||
+            !addressData.firstName ||
+            !addressData.lastName
+        ) {
             toast.error("Please fill in all fields");
             return;
         }
 
-        const orderData = {
-            items: cart,
-            total: cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
-            createdAt: serverTimestamp(),
-            status: 'Processing',
-            user: currentUser.uid,
-            address: addressData,
-            paymentMethod: paymentMethod,
-        };
+        // ✅ CLEAN CART (prevents Stripe $0 bug)
+        const cleanedCart = cart.map(item => ({
+            ...item,
+            price: Number(item.price),
+            quantity: Number(item.quantity)
+        }));
 
+        // =========================
+        // 💵 COD
+        // =========================
         if (paymentMethod === 'COD') {
             try {
-                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
-                const response = await fetch(`${API_BASE_URL}/create-cod-order`,{
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: cart,
-                        userId: currentUser.uid,
-                        status: orderData.status,
-                        address: addressData,
-                        amount: total,
-                        paymentMethod: 'COD',
-                        status: 'Order Placed (COD)',
-                    }),
-                });
+                const API_BASE_URL =
+                    process.env.REACT_APP_API_URL ||
+                    'https://snapcart-full-4.onrender.com';
 
-                if (response.ok) {
-                    localStorage.removeItem('snapcart_items');
-                    toast.success("Order placed successfully")
-                    setCart([]);
+                const response = await fetch(
+                    `${API_BASE_URL}/create-cod-order`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            items: cleanedCart,
+                            userId: currentUser.uid,
+                            address: addressData,
+                        }),
+                    }
+                );
 
-                    navigate('/orders');
-                } else {
-                    toast.error("Order failed")
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "COD failed");
                 }
+
+                // ✅ clear only after success
+                localStorage.removeItem('snapcart_items');
+                setCart([]);
+
+                toast.success("Order placed successfully");
+                navigate('/orders');
+
             } catch (error) {
-                toast.error("COD Error:", error);
+                console.error("COD ERROR:", error);
+                toast.error("COD order failed");
             }
         }
 
+        // =========================
+        // 💳 STRIPE
+        // =========================
         else if (paymentMethod === 'stripe') {
             try {
+                const API_BASE_URL =
+                    process.env.REACT_APP_API_URL ||
+                    'https://snapcart-full-4.onrender.com';
 
-                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
-                const response = await fetch(`${API_BASE_URL}/create-checkout-session`,{
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        items: cart,
-                        userId: currentUser.uid,
-                        address: addressData,
-                        amount: total,
-                        status: orderData.status,
-                    }),
-                });
+                const response = await fetch(
+                    `${API_BASE_URL}/create-checkout-session`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            items: cleanedCart,
+                            userId: currentUser.uid,
+                            address: addressData,
+                        }),
+                    }
+                );
+
+                // 🔥 safer error handling
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || "Stripe request failed");
+                }
 
                 const session = await response.json();
 
-                if (session.url) {
-                    window.location.href = session.url;
+                if (!session.url) {
+                    throw new Error("No Stripe URL returned");
                 }
 
-                if (response.ok) {
-                    toast.success("Order placed successfully")
-                    setCart([]);
-                }
+                // ❗ DO NOT clear cart here
+                window.location.href = session.url;
 
             } catch (error) {
-                toast.error("An error occured during checkout please try again");
+                console.error("STRIPE ERROR:", error);
+                toast.error("Stripe checkout failed");
             }
         }
-    }
+    };
 
     return (
         <section id="checkout">
@@ -166,61 +187,88 @@ const Checkout = ({ cart, setCart }) => {
             <div className="cart__container">
                 <div className="card-details">
                     {cart.map((item) => (
-                        <div key={`${item.id}-${item.size}`} className="cart__item-card">
-
-                            <img className="cart-item-image" src={item.image} alt={item.name} />
+                        <div
+                            key={`${item.id}-${item.size}`}
+                            className="cart__item-card"
+                        >
+                            <img
+                                className="cart-item-image"
+                                src={item.image}
+                                alt={item.name}
+                            />
 
                             <div>
                                 <h4 className="item_name">{item.name}</h4>
 
-                                {item.size && <p className="item_size">Size: {item.size}</p>}
+                                {item.size && (
+                                    <p className="item_size">
+                                        Size: {item.size}
+                                    </p>
+                                )}
 
                                 <div className="quantity-controls">
                                     <button
-                                        className="qty-btn"
-                                        onClick={() => updateQuantity(item.id, -1, item.size)}
-                                    >-</button>
+                                        onClick={() =>
+                                            updateQuantity(
+                                                item.id,
+                                                -1,
+                                                item.size
+                                            )
+                                        }
+                                    >
+                                        -
+                                    </button>
 
-                                    <span className="qty-number">{item.quantity}</span>
+                                    <span>{item.quantity}</span>
 
                                     <button
-                                        className="qty-btn"
-                                        onClick={() => updateQuantity(item.id, 1, item.size)}
-                                    >+</button>
+                                        onClick={() =>
+                                            updateQuantity(
+                                                item.id,
+                                                1,
+                                                item.size
+                                            )
+                                        }
+                                    >
+                                        +
+                                    </button>
                                 </div>
 
-                                <p className="item_quantity">Quantity: {item.quantity}</p>
+                                <p>Quantity: {item.quantity}</p>
                             </div>
 
-                            <span className="item_price">
-                                ${(item.price * item.quantity).toFixed(2)}
+                            <span>
+                                $
+                                {(
+                                    Number(item.price) *
+                                    Number(item.quantity)
+                                ).toFixed(2)}
                             </span>
-
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* DELIVERY INFO */}
+            {/* DELIVERY */}
             <div className="input__title--container">
-                <h4 className="input__title">Delivery Information</h4>
+                <h4>Delivery Information</h4>
             </div>
 
             <div className="input_container">
-                <input onChange={onChangeHandler} name='firstName' value={addressData.firstName} type="text" placeholder="First Name" required />
-                <input onChange={onChangeHandler} name='lastName' value={addressData.lastName} type="text" placeholder="Last Name" required />
-                <input onChange={onChangeHandler} name='email' value={addressData.email} type="email" placeholder="Email" required />
-                <input onChange={onChangeHandler} name='address' value={addressData.address} type="text" placeholder="Address" required />
-                <input onChange={onChangeHandler} name='city' value={addressData.city} type="text" placeholder="City" required />
-                <input onChange={onChangeHandler} name='state' value={addressData.state} type="text" placeholder="State" required />
-                <input onChange={onChangeHandler} name='country' value={addressData.country} type="text" placeholder="Country" required />
-                <input onChange={onChangeHandler} name='zipCode' value={addressData.zipCode} type="number" placeholder="Zip Code" required />
+                <input name="firstName" value={addressData.firstName} onChange={onChangeHandler} placeholder="First Name" />
+                <input name="lastName" value={addressData.lastName} onChange={onChangeHandler} placeholder="Last Name" />
+                <input name="email" value={addressData.email} onChange={onChangeHandler} placeholder="Email" />
+                <input name="address" value={addressData.address} onChange={onChangeHandler} placeholder="Address" />
+                <input name="city" value={addressData.city} onChange={onChangeHandler} placeholder="City" />
+                <input name="state" value={addressData.state} onChange={onChangeHandler} placeholder="State" />
+                <input name="country" value={addressData.country} onChange={onChangeHandler} placeholder="Country" />
+                <input name="zipCode" value={addressData.zipCode} onChange={onChangeHandler} placeholder="Zip Code" />
             </div>
 
-            {/* PAYMENT METHOD */}
-            <h4 className="payment__method--title">Select Payment Method</h4>
+            {/* PAYMENT */}
+            <h4>Select Payment Method</h4>
 
-            <figure className="payment__method__container">
+            <div className="payment__method__container">
                 <img
                     className={`stripe ${paymentMethod === 'stripe' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('stripe')}
@@ -232,27 +280,29 @@ const Checkout = ({ cart, setCart }) => {
                     className={`COD ${paymentMethod === 'COD' ? 'selected' : ''}`}
                     onClick={() => setPaymentMethod('COD')}
                     src={COD}
-                    alt="Cash on Delivery"
+                    alt="COD"
                 />
-            </figure>
+            </div>
 
-            {/* ORDER SUMMARY */}
+            {/* SUMMARY */}
             <div className="cart-summary--checkout">
-                <h3 className="order_summary">Order Summary</h3>
-                <div className="summary-line"><span className="cart">Price:</span><span className="cart_price">${subtotal.toFixed(2)} </span></div>
-                <div className="summary-line"><span className="cart">Shipping:</span><span className="cart_price">${shipping.toFixed(2)} </span></div>
-                <div className="summary-line"><span className="cart">Tax:</span><span className="cart_price">${tax.toFixed(2)} </span></div>
+                <h3>Order Summary</h3>
 
-                <div className="summary-line--total"><span className="cart">Total:</span><span className="cart_price"> ${total.toFixed(2)}</span></div>
+                <div>Subtotal: ${subtotal.toFixed(2)}</div>
+                <div>Shipping: ${shipping.toFixed(2)}</div>
+                <div>Tax: ${tax.toFixed(2)}</div>
 
-                <button onClick={handleCheckout} className="checkout_btn">
+                <div>
+                    <strong>Total: ${total.toFixed(2)}</strong>
+                </div>
+
+                <button onClick={handleCheckout}>
                     Place Order
                 </button>
             </div>
 
         </section>
     );
-}
-
+};
 
 export default Checkout;
