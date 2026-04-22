@@ -28,10 +28,10 @@ const Checkout = ({ cart, setCart }) => {
     };
 
     // =========================
-    // SAFE TOTAL CALC (UI UNCHANGED)
+    // FIXED SAFE TOTAL CALC
     // =========================
     const subtotal = cart.reduce((acc, item) => {
-        const price = Number(item.price);
+        const price = Number(String(item.price).replace(/[^0-9.]/g, ""));
         const qty = Number(item.quantity);
 
         if (!Number.isFinite(price) || !Number.isFinite(qty)) return acc;
@@ -91,26 +91,26 @@ const Checkout = ({ cart, setCart }) => {
         }
 
         // =========================
-        // 🔥 FIXED CART CLEANING (STRIPE FIX)
+        // CLEAN CART (IMPORTANT FIX)
         // =========================
         const cleanedCart = cart
             .map(item => {
-                const rawPrice = item.price;
-
-                const price =
-                    typeof rawPrice === "string"
-                        ? parseFloat(rawPrice.replace(/[^0-9.]/g, ""))
-                        : Number(rawPrice);
-
+                const price = Number(String(item.price).replace(/[^0-9.]/g, ""));
                 const quantity = Number(item.quantity);
 
                 return {
                     name: item.name,
-                    price: isNaN(price) ? 0 : price,
-                    quantity: isNaN(quantity) ? 1 : quantity
+                    price: price,
+                    quantity: quantity
                 };
             })
-            .filter(item => item.price > 0 && item.quantity > 0);
+            .filter(item =>
+                item.name &&
+                Number.isFinite(item.price) &&
+                Number.isFinite(item.quantity) &&
+                item.price > 0 &&
+                item.quantity > 0
+            );
 
         if (cleanedCart.length === 0) {
             toast.error("Cart is empty or invalid");
@@ -217,7 +217,7 @@ const Checkout = ({ cart, setCart }) => {
                             </div>
 
                             <span>
-                                ${(Number(item.price) * Number(item.quantity)).toFixed(2)}
+                                ${(Number(String(item.price).replace(/[^0-9.]/g, "")) * Number(item.quantity)).toFixed(2)}
                             </span>
                         </div>
                     ))}
