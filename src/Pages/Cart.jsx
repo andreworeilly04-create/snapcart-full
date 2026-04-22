@@ -1,7 +1,7 @@
 import React from "react";
 import "./Cart.css";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { toast } from "react-toastify"
 
 // =========================
 // 💾 SAVE CART
