@@ -8,12 +8,17 @@ const serviceAccount = require('./serviceAccountKey.json');
 const app = express();
 
 // ======================
-// ENV FIX (IMPORTANT)
+// FIREBASE INIT
 // ======================
-const CLIENT_URL =
-    process.env.CLIENT_URL ||
-    "https://snapcart-store.vercel.app"; // fallback so Stripe never breaks
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
 
+const db = admin.firestore();
+
+// ======================
+// ENV CHECK
+// ======================
 if (!process.env.STRIPE_SECRET_KEY) {
     console.error("❌ Missing STRIPE_SECRET_KEY");
     process.exit(1);
@@ -24,14 +29,8 @@ if (!process.env.STRIPE_WEBHOOK_SECRET) {
     process.exit(1);
 }
 
-// ======================
-// FIREBASE INIT
-// ======================
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-});
-
-const db = admin.firestore();
+const CLIENT_URL =
+    process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
 
 // ======================
 // CORS
@@ -42,7 +41,7 @@ app.use(cors({
 }));
 
 // ======================
-// IMPORTANT: BODY PARSERS
+// BODY PARSER
 // ======================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -55,7 +54,7 @@ app.get('/', (req, res) => {
 });
 
 // ======================
-// STRIPE WEBHOOK (RAW BODY)
+// STRIPE WEBHOOK
 // ======================
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
 
@@ -74,42 +73,34 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         return res.status(400).send("Webhook Error");
     }
 
-    console.log("🔥 EVENT:", event.type);
+    console.log("🔥 WEBHOOK EVENT:", event.type);
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
 
         try {
-            console.log("🧾 SESSION:", session.id);
+            console.log("🧾 SESSION ID:", session.id);
 
-            // prevent duplicates
-            const existing = await db.collection('orders')
-                .where('stripeSessionId', '==', session.id)
-                .get();
+            const orderId = session.metadata?.orderId;
 
-            if (!existing.empty) {
-                console.log("⚠️ Duplicate order ignored");
+            if (!orderId) {
+                console.log("❌ No orderId in metadata");
                 return res.json({ received: true });
             }
 
-            // ======================
-            // SAFE ORDER CREATION
-            // ======================
-            const order = {
-                userId: session.metadata?.userId || "guest",
-                amount: session.amount_total / 100,
+            // 🔥 UPDATE EXISTING ORDER (OPTION A CORE FIX)
+            await db.collection('orders').doc(orderId).update({
                 status: "Paid",
-                paymentMethod: "Stripe",
                 stripeSessionId: session.id,
-                createdAt: admin.firestore.FieldValue.serverTimestamp()
-            };
+                paymentMethod: "Stripe",
+                paidAt: admin.firestore.FieldValue.serverTimestamp(),
+                amount: session.amount_total / 100
+            });
 
-            await db.collection('orders').add(order);
-
-            console.log("✅ ORDER SAVED");
+            console.log("✅ ORDER UPDATED:", orderId);
 
         } catch (err) {
-            console.error("❌ Order save error:", err);
+            console.error("❌ Webhook update error:", err);
         }
     }
 
@@ -117,7 +108,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 });
 
 // ======================
-// STRIPE CHECKOUT SESSION
+// CREATE STRIPE SESSION (OPTION A FIXED)
 // ======================
 app.post('/create-checkout-session', async (req, res) => {
 
@@ -135,8 +126,21 @@ app.post('/create-checkout-session', async (req, res) => {
         }
 
         // ======================
-        // FIX: Stripe metadata limit (500 chars)
-        // 👉 DO NOT send full cart
+        // STEP 1: CREATE ORDER FIRST (IMPORTANT)
+        // ======================
+        const orderRef = await db.collection('orders').add({
+            userId,
+            items,
+            address,
+            status: "Pending Payment",
+            paymentMethod: "Stripe",
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log("🟡 TEMP ORDER CREATED:", orderRef.id);
+
+        // ======================
+        // STEP 2: STRIPE LINE ITEMS
         // ======================
         const line_items = items.map(item => ({
             price_data: {
@@ -149,6 +153,9 @@ app.post('/create-checkout-session', async (req, res) => {
             quantity: item.quantity
         }));
 
+        // ======================
+        // STEP 3: STRIPE SESSION
+        // ======================
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
@@ -158,13 +165,13 @@ app.post('/create-checkout-session', async (req, res) => {
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
 
-            // ONLY SAFE DATA HERE
+            // ONLY SAFE DATA
             metadata: {
-                userId: String(userId)
+                orderId: orderRef.id
             }
         });
 
-        console.log("✅ STRIPE SESSION:", session.id);
+        console.log("✅ STRIPE SESSION CREATED:", session.id);
 
         res.json({ url: session.url });
 
@@ -175,16 +182,12 @@ app.post('/create-checkout-session', async (req, res) => {
 });
 
 // ======================
-// COD ORDER
+// COD ORDER (UNCHANGED)
 // ======================
 app.post('/create-cod-order', async (req, res) => {
 
     try {
         const { items, userId, address } = req.body;
-
-        if (!items || !userId) {
-            return res.status(400).json({ error: "Missing fields" });
-        }
 
         const total = items.reduce(
             (sum, item) => sum + item.price * item.quantity,
@@ -200,8 +203,6 @@ app.post('/create-cod-order', async (req, res) => {
             paymentMethod: "COD",
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
-
-        console.log("✅ COD ORDER SAVED:", doc.id);
 
         res.json({ success: true, orderId: doc.id });
 
