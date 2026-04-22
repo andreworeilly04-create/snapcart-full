@@ -19,7 +19,7 @@ if (!process.env.STRIPE_WEBHOOK_SECRET) {
 }
 
 const CLIENT_URL =
-    process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
+    process.env.CLIENT_URL || "https://snapcart-full-beta.vercel.app";
 
 // =========================
 // FIREBASE INIT
