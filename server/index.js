@@ -60,7 +60,7 @@ const verifyToken = async (req, res, next) => {
 };
 
 
-// 🔥 STRIPE WEBHOOK
+// 🔥 STRIPE WEBHOOK (FIXED + SAFE)
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
 
@@ -77,11 +77,15 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         return res.status(400).send("Webhook Error");
     }
 
-    console.log("📡 Event:", event.type);
+    console.log("📡 EVENT:", event.type);
 
     try {
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
+
+            console.log("🔥 WEBHOOK TRIGGERED");
+            console.log("🧾 SESSION:", session.id);
+            console.log("📦 METADATA:", session.metadata);
 
             // 🔥 Prevent duplicate orders
             const existing = await db.collection('orders')
@@ -90,22 +94,29 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                 .get();
 
             if (!existing.empty) {
-                console.log("⚠️ Duplicate order ignored");
+                console.log("⚠️ Duplicate order skipped");
                 return res.json({ received: true });
             }
 
+            // 🔥 SAFE PARSING
             let items = [];
             let address = {};
 
             try {
-                items = JSON.parse(session.metadata.items || '[]');
-                address = JSON.parse(session.metadata.address || '{}');
-            } catch (e) {
-                console.log("⚠️ Metadata parse failed");
+                items = session.metadata.items
+                    ? JSON.parse(session.metadata.items)
+                    : [];
+
+                address = session.metadata.address
+                    ? JSON.parse(session.metadata.address)
+                    : {};
+            } catch (err) {
+                console.error("❌ Metadata parse error:", err);
             }
 
             const userId = session.metadata.userId || "guest";
 
+            // 🔥 CREATE ORDER
             const orderRef = await db.collection('orders').add({
                 userId,
                 items,
@@ -117,7 +128,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
                 createdAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            console.log("✅ Order created:", orderRef.id);
+            console.log("✅ ORDER CREATED:", orderRef.id);
         }
 
         res.json({ received: true });
@@ -129,16 +140,16 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 });
 
 
-// ✅ JSON middleware AFTER webhook
+// ✅ JSON middleware (AFTER webhook ONLY)
 app.use(express.json());
 
 
-// 🧾 STRIPE CHECKOUT SESSION (FIXED VERSION)
+// 🧾 CREATE STRIPE CHECKOUT SESSION (FIXED)
 app.post('/create-checkout-session', async (req, res) => {
     const { items, userId, address } = req.body;
 
     try {
-        console.log("🧾 Items received:", items);
+        console.log("🧾 Incoming items:", items);
 
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ error: "Invalid items" });
@@ -148,12 +159,12 @@ app.post('/create-checkout-session', async (req, res) => {
             return res.status(400).json({ error: "Missing userId or address" });
         }
 
-        // 🔥 VALIDATE ITEMS BEFORE STRIPE
+        // 🔥 VALIDATE ITEMS
         const line_items = items.map(item => {
             const price = Number(item.price);
             const quantity = Number(item.quantity);
 
-            if (!price || isNaN(price) || isNaN(quantity)) {
+            if (isNaN(price) || isNaN(quantity)) {
                 throw new Error(`Invalid item: ${JSON.stringify(item)}`);
             }
 
@@ -165,10 +176,11 @@ app.post('/create-checkout-session', async (req, res) => {
                     },
                     unit_amount: Math.round(price * 100),
                 },
-                quantity: quantity,
+                quantity
             };
         });
 
+        // 🔥 STRIPE SESSION
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
@@ -178,24 +190,26 @@ app.post('/create-checkout-session', async (req, res) => {
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
 
-            // 🔥 SAFE METADATA (Stripe limit safe)
+            // 🔥 IMPORTANT: SEND EVERYTHING FOR WEBHOOK
             metadata: {
-                userId: String(userId)
+                userId: String(userId),
+                items: JSON.stringify(items),
+                address: JSON.stringify(address)
             }
         });
 
-        console.log("✅ Stripe session created:", session.id);
+        console.log("✅ STRIPE SESSION:", session.id);
 
         res.json({ url: session.url });
 
     } catch (error) {
-        console.error("❌ Stripe session error:", error.message);
+        console.error("❌ Stripe error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
 
-// 💵 COD ORDER
+// 💵 COD ORDER (FIXED)
 app.post('/create-cod-order', async (req, res) => {
     const { items, userId, address } = req.body;
 
@@ -232,10 +246,6 @@ app.post('/create-cod-order', async (req, res) => {
 // 🔄 UPDATE ORDER STATUS
 app.post('/update-order-status', verifyToken, async (req, res) => {
     const { orderId, newStatus } = req.body;
-
-    if (!orderId || !newStatus) {
-        return res.status(400).json({ error: "Missing fields" });
-    }
 
     try {
         await db.collection('orders').doc(orderId).update({
