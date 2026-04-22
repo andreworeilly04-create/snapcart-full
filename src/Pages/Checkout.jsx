@@ -257,16 +257,16 @@ const Checkout = ({ cart, setCart }) => {
                 />
             </div>
 
-            <div className="cart-summary--checkout">
+            <div className="cart-summary">
                 <h3 className="order_summary">Order Summary</h3>
 
-                <div>Subtotal: ${subtotal.toFixed(2)}</div>
-                <div>Shipping: ${shipping.toFixed(2)}</div>
-                <div>Tax: ${tax.toFixed(2)}</div>
+                <span>Subtotal: ${subtotal.toFixed(2)}</span>
+                <span>Shipping: ${shipping.toFixed(2)}</span>
+                <span>Tax: ${tax.toFixed(2)}</span>
 
-                <div>
-                    <strong>Total: ${total.toFixed(2)}</strong>
-                </div>
+                <span>
+                    Total: ${total.toFixed(2)}
+                </span>
 
                 <button className="checkout_btn" onClick={handleCheckout}>
                     Place Order
