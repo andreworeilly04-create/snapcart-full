@@ -28,7 +28,7 @@ const Checkout = ({ cart, setCart }) => {
     };
 
     // =========================
-    // FIXED SAFE TOTAL CALC
+    // SAFE TOTAL CALC
     // =========================
     const subtotal = cart.reduce((acc, item) => {
         const price = Number(String(item.price).replace(/[^0-9.]/g, ""));
@@ -91,7 +91,7 @@ const Checkout = ({ cart, setCart }) => {
         }
 
         // =========================
-        // CLEAN CART (IMPORTANT FIX)
+        // FIXED CART (INCLUDES IMAGE — IMPORTANT)
         // =========================
         const cleanedCart = cart
             .map(item => {
@@ -101,7 +101,9 @@ const Checkout = ({ cart, setCart }) => {
                 return {
                     name: item.name,
                     price: price,
-                    quantity: quantity
+                    quantity: quantity,
+                    image: item.image,   // 🔥 FIX: REQUIRED FOR ORDERS PAGE
+                    size: item.size
                 };
             })
             .filter(item =>
@@ -210,9 +212,9 @@ const Checkout = ({ cart, setCart }) => {
                                 )}
 
                                 <div className="quantity-controls">
-                                    <button className="qty-btn" onClick={() => updateQuantity(item.id, -1, item.size)}>-</button>
+                                    <button onClick={() => updateQuantity(item.id, -1, item.size)}>-</button>
                                     <span>{item.quantity}</span>
-                                    <button className="qty-btn" onClick={() => updateQuantity(item.id, 1, item.size)}>+</button>
+                                    <button onClick={() => updateQuantity(item.id, 1, item.size)}>+</button>
                                 </div>
                             </div>
 
