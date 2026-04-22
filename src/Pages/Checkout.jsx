@@ -4,8 +4,7 @@ import StripeImg from '../assets/stripe.png';
 import COD from '../assets/cash_on_delivery.png';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { auth, db } from '../Firebase';
-import { collection, serverTimestamp, } from 'firebase/firestore';
+import { auth } from '../Firebase';
 
 const Checkout = ({ cart, setCart }) => {
 
@@ -25,16 +24,14 @@ const Checkout = ({ cart, setCart }) => {
     });
 
     const onChangeHandler = (event) => {
-        const name = event.target.name;
-        const value = event.target.value;
-        setAddressData(data => ({ ...data, [name]: value }))
+        const { name, value } = event.target;
+        setAddressData(prev => ({ ...prev, [name]: value }));
     };
 
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const shipping = cart.length > 0 ? 5.99 : 0;
     const tax = subtotal * 0.10;
     const total = subtotal + shipping + tax;
-
 
     const updateQuantity = (id, change, size) => {
         const updatedCart = cart.map((item) =>
@@ -56,8 +53,8 @@ const Checkout = ({ cart, setCart }) => {
         localStorage.setItem('snapcart_items', JSON.stringify(updatedCart));
     };
 
-    const handleCheckout = async (error) => {
-        error.preventDefault();
+    const handleCheckout = async (e) => {
+        e.preventDefault();
 
         const currentUser = auth.currentUser;
 
@@ -66,94 +63,76 @@ const Checkout = ({ cart, setCart }) => {
             return;
         }
 
-
         if (!paymentMethod) {
             toast.error("Please select a payment method");
             return;
         }
 
-
         const { address, city, state, zipCode, firstName, lastName } = addressData;
 
-
-        if (!addressData.address || !addressData.city || !addressData.state || !addressData.zipCode || !addressData.firstName || !addressData.lastName) {
+        if (!address || !city || !state || !zipCode || !firstName || !lastName) {
             toast.error("Please fill in all fields");
             return;
         }
 
-        const orderData = {
-            items: cart,
-            total: cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
-            createdAt: serverTimestamp(),
-            status: 'Processing',
-            user: currentUser.uid,
-            address: addressData,
-            paymentMethod: paymentMethod,
-        };
+        const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com';
 
+        // 💵 CASH ON DELIVERY
         if (paymentMethod === 'COD') {
             try {
-                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
-                const response = await fetch(`${API_BASE_URL}/create-cod-order`,{
+                const response = await fetch(`${API_BASE_URL}/create-cod-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         items: cart,
                         userId: currentUser.uid,
-                        status: orderData.status,
-                        address: addressData,
-                        amount: total,
-                        paymentMethod: 'COD',
-                        status: 'Order Placed (COD)',
+                        address: addressData
                     }),
                 });
 
                 if (response.ok) {
                     localStorage.removeItem('snapcart_items');
-                    toast.success("Order placed successfully")
                     setCart([]);
-
+                    toast.success("Order placed successfully (COD)");
                     navigate('/orders');
                 } else {
-                    toast.error("Order failed")
+                    toast.error("COD order failed");
                 }
+
             } catch (error) {
-                toast.error("COD Error:", error);
+                console.error(error);
+                toast.error("COD error occurred");
             }
         }
 
+        // 💳 STRIPE
         else if (paymentMethod === 'stripe') {
             try {
-
-                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
-                const response = await fetch(`${API_BASE_URL}/create-checkout-session`,{
+                const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         items: cart,
                         userId: currentUser.uid,
-                        address: addressData,
-                        amount: total,
-                        status: orderData.status,
+                        address: addressData
                     }),
                 });
 
                 const session = await response.json();
 
                 if (session.url) {
+                    // ✅ Redirect to Stripe (DO NOT clear cart here)
                     window.location.href = session.url;
-                }
-
-                if (response.ok) {
-                    toast.success("Order placed successfully")
-                    setCart([]);
+                } else {
+                    toast.error("Failed to start Stripe checkout");
                 }
 
             } catch (error) {
-                toast.error("An error occured during checkout please try again");
+                console.error(error);
+                toast.error("Stripe checkout failed");
             }
         }
-    }
+    };
 
     return (
         <section id="checkout">
@@ -239,11 +218,26 @@ const Checkout = ({ cart, setCart }) => {
             {/* ORDER SUMMARY */}
             <div className="cart-summary--checkout">
                 <h3 className="order_summary">Order Summary</h3>
-                <div className="summary-line"><span className="cart">Price:</span><span className="cart_price">${subtotal.toFixed(2)} </span></div>
-                <div className="summary-line"><span className="cart">Shipping:</span><span className="cart_price">${shipping.toFixed(2)} </span></div>
-                <div className="summary-line"><span className="cart">Tax:</span><span className="cart_price">${tax.toFixed(2)} </span></div>
 
-                <div className="summary-line--total"><span className="cart">Total:</span><span className="cart_price"> ${total.toFixed(2)}</span></div>
+                <div className="summary-line">
+                    <span>Price:</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                </div>
+
+                <div className="summary-line">
+                    <span>Shipping:</span>
+                    <span>${shipping.toFixed(2)}</span>
+                </div>
+
+                <div className="summary-line">
+                    <span>Tax:</span>
+                    <span>${tax.toFixed(2)}</span>
+                </div>
+
+                <div className="summary-line--total">
+                    <span>Total:</span>
+                    <span>${total.toFixed(2)}</span>
+                </div>
 
                 <button onClick={handleCheckout} className="checkout_btn">
                     Place Order
@@ -252,7 +246,6 @@ const Checkout = ({ cart, setCart }) => {
 
         </section>
     );
-}
-
+};
 
 export default Checkout;
