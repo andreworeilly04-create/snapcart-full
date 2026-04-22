@@ -257,7 +257,7 @@ const Checkout = ({ cart, setCart }) => {
                 />
             </div>
 
-            <div className="cart-summary">
+            <div className="cart-summary--checkout">
                 <h3 className="order_summary">Order Summary</h3>
 
                 <span>Subtotal: ${subtotal.toFixed(2)}</span>
