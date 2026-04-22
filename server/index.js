@@ -35,9 +35,7 @@ app.use(cors({
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true,
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    credentials: true
 }));
 
 // ✅ HEALTH CHECK
@@ -45,14 +43,10 @@ app.get('/', (req, res) => {
     res.send('Server is running');
 });
 
-// 🔐 AUTH MIDDLEWARE (optional)
+// 🔐 AUTH MIDDLEWARE
 const verifyToken = async (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.split('Bearer ')[1];
-
-    if (!token) {
-        return res.status(401).send('Unauthorized');
-    }
+    const token = req.headers.authorization?.split('Bearer ')[1];
+    if (!token) return res.status(401).send('Unauthorized');
 
     try {
         const decoded = await admin.auth().verifyIdToken(token);
@@ -64,7 +58,7 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
-// 🔥 STRIPE WEBHOOK (MUST BE BEFORE express.json)
+// 🔥 STRIPE WEBHOOK (BEFORE JSON)
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
 
@@ -81,67 +75,65 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         return res.status(400).send(`Webhook Error`);
     }
 
-    console.log("📡 Event received:", event.type);
+    console.log("📡 Event:", event.type);
 
     try {
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
-
             const orderId = session.metadata?.orderId;
 
-            if (!orderId) {
-                return res.status(400).send("Missing orderId in metadata");
-            }
+            if (!orderId) return res.status(400).send("Missing orderId");
 
             const orderRef = db.collection('orders').doc(orderId);
             const orderDoc = await orderRef.get();
 
-            if (!orderDoc.exists) {
-                console.error("❌ Order not found:", orderId);
-                return res.status(404).send("Order not found");
-            }
+            if (!orderDoc.exists) return res.status(404).send("Order not found");
 
-            // ✅ Prevent duplicate processing
             if (orderDoc.data().status === 'Paid') {
-                console.log("⚠️ Order already processed");
                 return res.json({ received: true });
             }
 
             await orderRef.update({
                 status: 'Paid',
-
-                // ✅ Stripe is source of truth
-                amount: session.amount_total / 100,
+                amount: session.amount_total / 100, // ✅ Stripe truth
                 currency: session.currency,
-
                 stripeSessionId: session.id,
                 customerEmail: session.customer_details?.email || null,
-
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
-            console.log("✅ Order marked as PAID");
+            console.log("✅ Order PAID:", orderId);
         }
 
         res.json({ received: true });
 
     } catch (error) {
-        console.error("❌ Webhook processing error:", error);
+        console.error("❌ Webhook error:", error);
         res.status(500).send("Webhook failed");
     }
 });
 
-// ✅ JSON middleware AFTER webhook
+// ✅ JSON middleware
 app.use(express.json());
 
-// 🧾 CREATE STRIPE CHECKOUT SESSION
-app.post('/create-checkout-session', async (req, res) => {
-    console.log("📥 Incoming body:", req.body);
+// 💰 HELPER (ONLY FOR COD)
+const calculateTotal = (items) => {
+    const subtotal = items.reduce((total, item) => {
+        return total + (Number(item.price) * Number(item.quantity));
+    }, 0);
 
+    const shipping = items.length > 0 ? 5.99 : 0;
+    const tax = subtotal * 0.10;
+
+    return Number((subtotal + shipping + tax).toFixed(2));
+};
+
+// 🧾 STRIPE CHECKOUT
+app.post('/create-checkout-session', async (req, res) => {
     const { items, userId, address } = req.body;
 
-    if (!Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: "Items must be a non-empty array" });
+    if (!Array.isArray(items) || !items.length) {
+        return res.status(400).json({ error: "Invalid items" });
     }
 
     if (!userId || !address) {
@@ -149,7 +141,7 @@ app.post('/create-checkout-session', async (req, res) => {
     }
 
     try {
-        // ✅ Create order (no amount yet)
+        // Create order (no amount yet)
         const orderRef = await db.collection('orders').add({
             userId,
             items,
@@ -159,44 +151,31 @@ app.post('/create-checkout-session', async (req, res) => {
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log("📝 Order created:", orderRef.id);
-
-        // ✅ Stripe session
         const session = await stripe.checkout.sessions.create({
             mode: 'payment',
-
             payment_method_types: ['card'],
 
             line_items: items.map(item => ({
                 price_data: {
                     currency: 'usd',
-                    product_data: {
-                        name: item.name
-                    },
+                    product_data: { name: item.name },
                     unit_amount: Math.round(Number(item.price) * 100),
                 },
                 quantity: Number(item.quantity),
             })),
 
-            // 🔥 Automatic tax
             automatic_tax: { enabled: true },
 
-            // 🔥 Collect shipping address
             shipping_address_collection: {
                 allowed_countries: ['US'],
             },
 
-            // 🔥 Shipping rate
             shipping_options: [
                 {
                     shipping_rate_data: {
                         type: 'fixed_amount',
                         fixed_amount: { amount: 599, currency: 'usd' },
                         display_name: 'Standard Shipping',
-                        delivery_estimate: {
-                            minimum: { unit: 'business_day', value: 3 },
-                            maximum: { unit: 'business_day', value: 5 },
-                        },
                     },
                 },
             ],
@@ -210,35 +189,34 @@ app.post('/create-checkout-session', async (req, res) => {
             }
         });
 
-        console.log("✅ Stripe session created:", session.id);
-
         res.json({ url: session.url });
 
     } catch (error) {
-        console.error("❌ Stripe session error:", error);
+        console.error("❌ Stripe error:", error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// 💵 CASH ON DELIVERY
+// 💵 COD ORDER (FIXED)
 app.post('/create-cod-order', async (req, res) => {
     const { items, userId, address } = req.body;
 
     if (!items || !userId || !address) {
-        return res.status(400).json({ error: "Missing required fields" });
+        return res.status(400).json({ error: "Missing fields" });
     }
 
     try {
+        const total = calculateTotal(items); // ✅ FIX
+
         const orderRef = await db.collection('orders').add({
             userId,
             items,
             address,
+            amount: total, // ✅ NOW CORRECT
             status: 'Order Placed (COD)',
             paymentMethod: 'COD',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
-
-        console.log("📝 COD Order created:", orderRef.id);
 
         res.status(201).json({ success: true, orderId: orderRef.id });
 
@@ -248,7 +226,7 @@ app.post('/create-cod-order', async (req, res) => {
     }
 });
 
-// 🔄 UPDATE ORDER STATUS
+// 🔄 UPDATE ORDER
 app.post('/update-order-status', verifyToken, async (req, res) => {
     const { orderId, newStatus } = req.body;
 
@@ -262,21 +240,19 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log("✅ Order status updated:", orderId);
-
         res.json({ success: true });
 
     } catch (error) {
-        console.error("❌ Status update error:", error);
+        console.error("❌ Update error:", error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// 🚀 START SERVER
+// 🚀 START
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Running on http://localhost:${PORT}`);
 });
 
 module.exports = app;
