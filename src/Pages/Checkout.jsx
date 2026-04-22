@@ -5,7 +5,6 @@ import COD from '../assets/cash_on_delivery.png';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { auth } from '../Firebase';
-import { serverTimestamp } from 'firebase/firestore';
 
 const Checkout = ({ cart, setCart }) => {
     const navigate = useNavigate();
@@ -28,11 +27,18 @@ const Checkout = ({ cart, setCart }) => {
         setAddressData(data => ({ ...data, [name]: value }));
     };
 
-    // ✅ DISPLAY TOTAL ONLY
-    const subtotal = cart.reduce(
-        (acc, item) => acc + (Number(item.price) * Number(item.quantity)),
-        0
-    );
+    // =========================
+    // 🔥 FIXED TOTAL (NO UI CHANGE)
+    // =========================
+    const subtotal = cart.reduce((acc, item) => {
+        const price = Number(item.price);
+        const qty = Number(item.quantity);
+
+        if (isNaN(price) || isNaN(qty)) return acc;
+
+        return acc + (price * qty);
+    }, 0);
+
     const shipping = cart.length > 0 ? 5.99 : 0;
     const tax = subtotal * 0.10;
     const total = subtotal + shipping + tax;
@@ -40,7 +46,7 @@ const Checkout = ({ cart, setCart }) => {
     const updateQuantity = (id, change, size) => {
         const updatedCart = cart.map((item) =>
             item.id === id && item.size === size
-                ? { ...item, quantity: Math.max(1, item.quantity + change) }
+                ? { ...item, quantity: Math.max(1, Number(item.quantity) + change) }
                 : item
         );
 
@@ -84,11 +90,13 @@ const Checkout = ({ cart, setCart }) => {
             return;
         }
 
-        // ✅ CLEAN CART (prevents Stripe $0 bug)
+        // =========================
+        // 🔥 CLEAN CART (FIXES STRIPE BUG)
+        // =========================
         const cleanedCart = cart.map(item => ({
             ...item,
-            price: Number(item.price),
-            quantity: Number(item.quantity)
+            price: Number(item.price) || 0,
+            quantity: Number(item.quantity) || 0
         }));
 
         // =========================
@@ -100,18 +108,15 @@ const Checkout = ({ cart, setCart }) => {
                     process.env.REACT_APP_API_URL ||
                     'https://snapcart-full-4.onrender.com';
 
-                const response = await fetch(
-                    `${API_BASE_URL}/create-cod-order`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            items: cleanedCart,
-                            userId: currentUser.uid,
-                            address: addressData,
-                        }),
-                    }
-                );
+                const response = await fetch(`${API_BASE_URL}/create-cod-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cleanedCart,
+                        userId: currentUser.uid,
+                        address: addressData,
+                    }),
+                });
 
                 const data = await response.json();
 
@@ -119,7 +124,6 @@ const Checkout = ({ cart, setCart }) => {
                     throw new Error(data.error || "COD failed");
                 }
 
-                // ✅ clear only after success
                 localStorage.removeItem('snapcart_items');
                 setCart([]);
 
@@ -141,23 +145,19 @@ const Checkout = ({ cart, setCart }) => {
                     process.env.REACT_APP_API_URL ||
                     'https://snapcart-full-4.onrender.com';
 
-                const response = await fetch(
-                    `${API_BASE_URL}/create-checkout-session`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            items: cleanedCart,
-                            userId: currentUser.uid,
-                            address: addressData,
-                        }),
-                    }
-                );
+                const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        items: cleanedCart,
+                        userId: currentUser.uid,
+                        address: addressData,
+                    }),
+                });
 
-                // 🔥 safer error handling
                 if (!response.ok) {
                     const text = await response.text();
-                    throw new Error(text || "Stripe request failed");
+                    throw new Error(text || "Stripe failed");
                 }
 
                 const session = await response.json();
@@ -166,7 +166,6 @@ const Checkout = ({ cart, setCart }) => {
                     throw new Error("No Stripe URL returned");
                 }
 
-                // ❗ DO NOT clear cart here
                 window.location.href = session.url;
 
             } catch (error) {
@@ -187,62 +186,26 @@ const Checkout = ({ cart, setCart }) => {
             <div className="cart__container">
                 <div className="card-details">
                     {cart.map((item) => (
-                        <div
-                            key={`${item.id}-${item.size}`}
-                            className="cart__item-card"
-                        >
-                            <img
-                                className="cart-item-image"
-                                src={item.image}
-                                alt={item.name}
-                            />
+                        <div key={`${item.id}-${item.size}`} className="cart__item-card">
+
+                            <img className="cart-item-image" src={item.image} alt={item.name} />
 
                             <div>
                                 <h4 className="item_name">{item.name}</h4>
 
                                 {item.size && (
-                                    <p className="item_size">
-                                        Size: {item.size}
-                                    </p>
+                                    <p className="item_size">Size: {item.size}</p>
                                 )}
 
                                 <div className="quantity-controls">
-                                    <button
-                                        onClick={() =>
-                                            updateQuantity(
-                                                item.id,
-                                                -1,
-                                                item.size
-                                            )
-                                        }
-                                    >
-                                        -
-                                    </button>
-
+                                    <button onClick={() => updateQuantity(item.id, -1, item.size)}>-</button>
                                     <span>{item.quantity}</span>
-
-                                    <button
-                                        onClick={() =>
-                                            updateQuantity(
-                                                item.id,
-                                                1,
-                                                item.size
-                                            )
-                                        }
-                                    >
-                                        +
-                                    </button>
+                                    <button onClick={() => updateQuantity(item.id, 1, item.size)}>+</button>
                                 </div>
-
-                                <p>Quantity: {item.quantity}</p>
                             </div>
 
                             <span>
-                                $
-                                {(
-                                    Number(item.price) *
-                                    Number(item.quantity)
-                                ).toFixed(2)}
+                                ${(Number(item.price) * Number(item.quantity)).toFixed(2)}
                             </span>
                         </div>
                     ))}
