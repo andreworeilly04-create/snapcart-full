@@ -144,9 +144,12 @@ app.use(express.json());
 
 // 💰 HELPER: CALCULATE TOTAL
 const calculateTotal = (items) => {
-    return items.reduce((total, item) => {
+    
+   const subtotal = items.reduce((total, item) => {
         return total + (Number(item.price) * Number(item.quantity));
     }, 0);
+
+    const shipping = 5.99;
 };
 
 
@@ -178,7 +181,7 @@ app.post('/create-checkout-session', async (req, res) => {
             userId,
             items,
             address,
-            status: 'Pending Payment',
+            status: 'Canceled',
             paymentMethod: 'stripe',
             amount: total,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
