@@ -149,7 +149,12 @@ const calculateTotal = (items) => {
         return total + (Number(item.price) * Number(item.quantity));
     }, 0);
 
-    const shipping = 5.99;
+    const shipping = items.length > 0 ? 5.99 : 0;
+
+    const tax = subtotal * 0.10;
+
+    const total = subtotal + shipping + tax;
+
 };
 
 
@@ -194,7 +199,7 @@ app.post('/create-checkout-session', async (req, res) => {
             payment_method_types: ['card'],
             mode: 'payment',
 
-            line_items: items.map(item => ({
+            line_items: [ ...items.map(item => ({
                 price_data: {
                     currency: 'usd',
                     product_data: {
@@ -204,6 +209,23 @@ app.post('/create-checkout-session', async (req, res) => {
                 },
                 quantity: Number(item.quantity),
             })),
+            {
+                price_data: {
+                    currency: 'usd',
+                    product_data: {name: 'Shipping'},
+                    unit_amount:599,
+                },
+                quantity:1,
+            },
+            {
+            price_data: {
+                currency:'usd',
+                product_data: {name: 'Tax (10%) '},
+                unit_amount:Math.round(calculateTax(items) * 100),
+            },
+            quantity:1,
+        }
+    ],
 
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
