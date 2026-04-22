@@ -4,11 +4,13 @@ import StripeImg from '../assets/stripe.png';
 import COD from '../assets/cash_on_delivery.png';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { auth } from '../Firebase';
+import { auth, db } from '../Firebase';
+import { collection, serverTimestamp, } from 'firebase/firestore';
 
 const Checkout = ({ cart, setCart }) => {
 
     const navigate = useNavigate();
+
     const [paymentMethod, setPaymentMethod] = useState("");
 
     const [addressData, setAddressData] = useState({
@@ -23,14 +25,16 @@ const Checkout = ({ cart, setCart }) => {
     });
 
     const onChangeHandler = (event) => {
-        const { name, value } = event.target;
-        setAddressData(prev => ({ ...prev, [name]: value }));
+        const name = event.target.name;
+        const value = event.target.value;
+        setAddressData(data => ({ ...data, [name]: value }))
     };
 
     const subtotal = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const shipping = cart.length > 0 ? 5.99 : 0;
     const tax = subtotal * 0.10;
     const total = subtotal + shipping + tax;
+
 
     const updateQuantity = (id, change, size) => {
         const updatedCart = cart.map((item) =>
@@ -52,8 +56,8 @@ const Checkout = ({ cart, setCart }) => {
         localStorage.setItem('snapcart_items', JSON.stringify(updatedCart));
     };
 
-    const handleCheckout = async (e) => {
-        e.preventDefault();
+    const handleCheckout = async (error) => {
+        error.preventDefault();
 
         const currentUser = auth.currentUser;
 
@@ -62,90 +66,94 @@ const Checkout = ({ cart, setCart }) => {
             return;
         }
 
+
         if (!paymentMethod) {
             toast.error("Please select a payment method");
             return;
         }
 
+
         const { address, city, state, zipCode, firstName, lastName } = addressData;
 
-        if (!address || !city || !state || !zipCode || !firstName || !lastName) {
+
+        if (!addressData.address || !addressData.city || !addressData.state || !addressData.zipCode || !addressData.firstName || !addressData.lastName) {
             toast.error("Please fill in all fields");
             return;
         }
 
-        const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com';
+        const orderData = {
+            items: cart,
+            total: cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+            createdAt: serverTimestamp(),
+            status: 'Processing',
+            user: currentUser.uid,
+            address: addressData,
+            paymentMethod: paymentMethod,
+        };
 
-        // ======================
-        // COD
-        // ======================
         if (paymentMethod === 'COD') {
             try {
-                const response = await fetch(`${API_BASE_URL}/create-cod-order`, {
+                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
+                const response = await fetch(`${API_BASE_URL}/create-cod-order`,{
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         items: cart,
                         userId: currentUser.uid,
-                        address: addressData
+                        status: orderData.status,
+                        address: addressData,
+                        amount: total,
+                        paymentMethod: 'COD',
+                        status: 'Order Placed (COD)',
                     }),
                 });
 
-                const data = await response.json();
+                if (response.ok) {
+                    localStorage.removeItem('snapcart_items');
+                    toast.success("Order placed successfully")
+                    setCart([]);
 
-                if (!response.ok) {
-                    toast.error(data.error || "COD order failed");
-                    return;
+                    navigate('/orders');
+                } else {
+                    toast.error("Order failed")
                 }
-
-                localStorage.removeItem('snapcart_items');
-                setCart([]);
-
-                toast.success("Order placed successfully (COD)");
-                navigate('/orders');
-
             } catch (error) {
-                console.error(error);
-                toast.error("COD error occurred");
+                toast.error("COD Error:", error);
             }
         }
 
-        // ======================
-        // STRIPE
-        // ======================
         else if (paymentMethod === 'stripe') {
             try {
-                const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
+
+                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
+                const response = await fetch(`${API_BASE_URL}/create-checkout-session`,{
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         items: cart,
                         userId: currentUser.uid,
-                        address: addressData
+                        address: addressData,
+                        amount: total,
+                        status: orderData.status,
                     }),
                 });
 
                 const session = await response.json();
 
-                if (!response.ok) {
-                    toast.error(session.error || "Stripe failed");
-                    return;
+                if (session.url) {
+                    window.location.href = session.url;
                 }
 
-                if (!session.url) {
-                    toast.error("Stripe session URL missing");
-                    return;
+                if (response.ok) {
+                    toast.success("Order placed successfully")
+                    setCart([]);
                 }
-
-                // DO NOT clear cart
-                window.location.href = session.url;
 
             } catch (error) {
-                console.error(error);
-                toast.error("Stripe checkout failed");
+                toast.error("An error occured during checkout please try again");
             }
         }
-    };
+    }
 
     return (
         <section id="checkout">
@@ -231,26 +239,11 @@ const Checkout = ({ cart, setCart }) => {
             {/* ORDER SUMMARY */}
             <div className="cart-summary--checkout">
                 <h3 className="order_summary">Order Summary</h3>
+                <div className="summary-line"><span className="cart">Price:</span><span className="cart_price">${subtotal.toFixed(2)} </span></div>
+                <div className="summary-line"><span className="cart">Shipping:</span><span className="cart_price">${shipping.toFixed(2)} </span></div>
+                <div className="summary-line"><span className="cart">Tax:</span><span className="cart_price">${tax.toFixed(2)} </span></div>
 
-                <div className="summary-line">
-                    <span>Price:</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                </div>
-
-                <div className="summary-line">
-                    <span>Shipping:</span>
-                    <span>${shipping.toFixed(2)}</span>
-                </div>
-
-                <div className="summary-line">
-                    <span>Tax:</span>
-                    <span>${tax.toFixed(2)}</span>
-                </div>
-
-                <div className="summary-line--total">
-                    <span>Total:</span>
-                    <span>${total.toFixed(2)}</span>
-                </div>
+                <div className="summary-line--total"><span className="cart">Total:</span><span className="cart_price"> ${total.toFixed(2)}</span></div>
 
                 <button onClick={handleCheckout} className="checkout_btn">
                     Place Order
@@ -259,6 +252,7 @@ const Checkout = ({ cart, setCart }) => {
 
         </section>
     );
-};
+}
+
 
 export default Checkout;
