@@ -11,11 +11,12 @@ if (!process.env.STRIPE_SECRET_KEY) {
     process.exit(1);
 }
 
-const clientUrl = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
-
-if (!process.env.CLIENT_URL) {
-    console.warn("⚠️ CLIENT_URL missing, using default https://snapcart-store.vercel.app");
+if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("❌ Missing STRIPE_WEBHOOK_SECRET in .env");
+    process.exit(1);
 }
+
+const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
 
 // 🔥 INIT FIREBASE
 admin.initializeApp({
@@ -26,15 +27,15 @@ const db = admin.firestore();
 const app = express();
 
 // ✅ CORS
-app.use(cors({ 
+app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || origin.includes('localhost') || origin.includes('vercel.app')){
+        if (!origin || origin.includes('localhost') || origin.includes('vercel.app')) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials:true,
+    credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -44,12 +45,9 @@ app.get('/', (req, res) => {
     res.send('Server is running');
 });
 
-
 // 🔐 AUTH MIDDLEWARE (optional)
 const verifyToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
-    console.log("AUTH HEADER:", authHeader);
-
     const token = authHeader?.split('Bearer ')[1];
 
     if (!token) {
@@ -66,15 +64,9 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
-
 // 🔥 STRIPE WEBHOOK (MUST BE BEFORE express.json)
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
-
-    if (!process.env.STRIPE_WEBHOOK_SECRET) {
-        console.error("❌ Missing STRIPE_WEBHOOK_SECRET");
-        return res.status(500).send("Webhook not configured");
-    }
 
     let event;
 
@@ -95,11 +87,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
 
-            console.log("🧾 Full session:", session);
-
             const orderId = session.metadata?.orderId;
-
-            console.log("📦 Order ID from metadata:", orderId);
 
             if (!orderId) {
                 return res.status(400).send("Missing orderId in metadata");
@@ -121,8 +109,14 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 
             await orderRef.update({
                 status: 'Paid',
-                stripeSessionId: session.id,
+
+                // ✅ Stripe is source of truth
                 amount: session.amount_total / 100,
+                currency: session.currency,
+
+                stripeSessionId: session.id,
+                customerEmail: session.customer_details?.email || null,
+
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
@@ -137,18 +131,8 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
     }
 });
 
-
 // ✅ JSON middleware AFTER webhook
 app.use(express.json());
-
-
-// 💰 HELPER: CALCULATE TOTAL
-const calculateTotal = (items) => {
-    return items.reduce((total, item) => {
-        return total + (Number(item.price) * Number(item.quantity));
-    }, 0);
-};
-
 
 // 🧾 CREATE STRIPE CHECKOUT SESSION
 app.post('/create-checkout-session', async (req, res) => {
@@ -165,31 +149,23 @@ app.post('/create-checkout-session', async (req, res) => {
     }
 
     try {
-        // ✅ SAFE CLIENT URL
-        const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
-        console.log("🌐 CLIENT_URL:", CLIENT_URL);
-
-        // ✅ CALCULATE TOTAL
-        const total = calculateTotal(items);
-        console.log("💰 Calculated total:", total);
-
-        // ✅ CREATE ORDER
+        // ✅ Create order (no amount yet)
         const orderRef = await db.collection('orders').add({
             userId,
             items,
             address,
-            status: 'Canceled',
+            status: 'Pending Payment',
             paymentMethod: 'stripe',
-            amount: total,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
         console.log("📝 Order created:", orderRef.id);
 
-        // ✅ CREATE STRIPE SESSION
+        // ✅ Stripe session
         const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
             mode: 'payment',
+
+            payment_method_types: ['card'],
 
             line_items: items.map(item => ({
                 price_data: {
@@ -202,11 +178,35 @@ app.post('/create-checkout-session', async (req, res) => {
                 quantity: Number(item.quantity),
             })),
 
+            // 🔥 Automatic tax
+            automatic_tax: { enabled: true },
+
+            // 🔥 Collect shipping address
+            shipping_address_collection: {
+                allowed_countries: ['US'],
+            },
+
+            // 🔥 Shipping rate
+            shipping_options: [
+                {
+                    shipping_rate_data: {
+                        type: 'fixed_amount',
+                        fixed_amount: { amount: 599, currency: 'usd' },
+                        display_name: 'Standard Shipping',
+                        delivery_estimate: {
+                            minimum: { unit: 'business_day', value: 3 },
+                            maximum: { unit: 'business_day', value: 5 },
+                        },
+                    },
+                },
+            ],
+
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
 
             metadata: {
-                orderId: orderRef.id
+                orderId: orderRef.id,
+                userId
             }
         });
 
@@ -220,11 +220,8 @@ app.post('/create-checkout-session', async (req, res) => {
     }
 });
 
-
 // 💵 CASH ON DELIVERY
 app.post('/create-cod-order', async (req, res) => {
-    console.log("📥 COD body:", req.body);
-
     const { items, userId, address } = req.body;
 
     if (!items || !userId || !address) {
@@ -232,13 +229,10 @@ app.post('/create-cod-order', async (req, res) => {
     }
 
     try {
-        const total = calculateTotal(items);
-
         const orderRef = await db.collection('orders').add({
             userId,
             items,
             address,
-            amount: total,
             status: 'Order Placed (COD)',
             paymentMethod: 'COD',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -254,11 +248,8 @@ app.post('/create-cod-order', async (req, res) => {
     }
 });
 
-
 // 🔄 UPDATE ORDER STATUS
 app.post('/update-order-status', verifyToken, async (req, res) => {
-    console.log("📥 Update status body:", req.body);
-
     const { orderId, newStatus } = req.body;
 
     if (!orderId || !newStatus) {
@@ -281,15 +272,11 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
     }
 });
 
-
 // 🚀 START SERVER
-
-
-    const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
-
 
 module.exports = app;
