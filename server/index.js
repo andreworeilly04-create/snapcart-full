@@ -5,7 +5,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const admin = require('firebase-admin');
 const serviceAccount = require('./serviceAccountKey.json');
 
-// 🔥 ENV VALIDATION
+// 🔥 ENV CHECK
 if (!process.env.STRIPE_SECRET_KEY) {
     console.error("❌ Missing STRIPE_SECRET_KEY");
     process.exit(1);
@@ -18,7 +18,7 @@ if (!process.env.STRIPE_WEBHOOK_SECRET) {
 
 const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
 
-// 🔥 INIT FIREBASE
+// 🔥 FIREBASE INIT
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -40,7 +40,7 @@ app.use(cors({
 
 // ✅ HEALTH CHECK
 app.get('/', (req, res) => {
-    res.send('Server is running');
+    res.send('Server running');
 });
 
 
@@ -51,8 +51,7 @@ const verifyToken = async (req, res, next) => {
     if (!token) return res.status(401).send('Unauthorized');
 
     try {
-        const decoded = await admin.auth().verifyIdToken(token);
-        req.user = decoded;
+        req.user = await admin.auth().verifyIdToken(token);
         next();
     } catch (err) {
         console.error("❌ Auth error:", err);
@@ -61,7 +60,7 @@ const verifyToken = async (req, res, next) => {
 };
 
 
-// 🔥 STRIPE WEBHOOK (ONLY PLACE ORDER IS CREATED)
+// 🔥 STRIPE WEBHOOK
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
 
@@ -78,39 +77,35 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         return res.status(400).send("Webhook Error");
     }
 
-    console.log("📡 Stripe Event:", event.type);
+    console.log("📡 Event:", event.type);
 
     try {
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object;
 
-            console.log("🧾 Session ID:", session.id);
-
-            // ✅ Prevent duplicates
+            // 🔥 Prevent duplicate orders
             const existing = await db.collection('orders')
                 .where('stripeSessionId', '==', session.id)
                 .limit(1)
                 .get();
 
             if (!existing.empty) {
-                console.log("⚠️ Order already exists. Skipping.");
+                console.log("⚠️ Duplicate order ignored");
                 return res.json({ received: true });
             }
 
-            // ✅ Parse metadata safely
             let items = [];
             let address = {};
 
             try {
                 items = JSON.parse(session.metadata.items || '[]');
                 address = JSON.parse(session.metadata.address || '{}');
-            } catch (err) {
-                console.error("❌ Metadata parse error:", err);
+            } catch (e) {
+                console.log("⚠️ Metadata parse failed");
             }
 
             const userId = session.metadata.userId || "guest";
 
-            // ✅ Create order AFTER payment success
             const orderRef = await db.collection('orders').add({
                 userId,
                 items,
@@ -128,7 +123,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         res.json({ received: true });
 
     } catch (error) {
-        console.error("❌ Webhook processing error:", error);
+        console.error("❌ Webhook error:", error);
         res.status(500).send("Webhook failed");
     }
 });
@@ -138,52 +133,54 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
 app.use(express.json());
 
 
-// 💰 HELPER
-const calculateTotal = (items) => {
-    return items.reduce((total, item) => {
-        return total + (Number(item.price) * Number(item.quantity));
-    }, 0);
-};
-
-
-// 🧾 CREATE CHECKOUT SESSION (NO ORDER CREATION HERE)
+// 🧾 STRIPE CHECKOUT SESSION (FIXED VERSION)
 app.post('/create-checkout-session', async (req, res) => {
     const { items, userId, address } = req.body;
 
-    if (!Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: "Items must be non-empty array" });
-    }
-
-    if (!userId || !address) {
-        return res.status(400).json({ error: "Missing userId or address" });
-    }
-
     try {
-        console.log("🛒 Creating Stripe session ONLY (no DB write)");
+        console.log("🧾 Items received:", items);
+
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: "Invalid items" });
+        }
+
+        if (!userId || !address) {
+            return res.status(400).json({ error: "Missing userId or address" });
+        }
+
+        // 🔥 VALIDATE ITEMS BEFORE STRIPE
+        const line_items = items.map(item => {
+            const price = Number(item.price);
+            const quantity = Number(item.quantity);
+
+            if (!price || isNaN(price) || isNaN(quantity)) {
+                throw new Error(`Invalid item: ${JSON.stringify(item)}`);
+            }
+
+            return {
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: item.name || "Product"
+                    },
+                    unit_amount: Math.round(price * 100),
+                },
+                quantity: quantity,
+            };
+        });
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
 
-            line_items: items.map(item => ({
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: item.name
-                    },
-                    unit_amount: Math.round(Number(item.price) * 100),
-                },
-                quantity: Number(item.quantity),
-            })),
+            line_items,
 
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
 
-            // 🔥 Pass all order data here
+            // 🔥 SAFE METADATA (Stripe limit safe)
             metadata: {
-                userId,
-                items: JSON.stringify(items),
-                address: JSON.stringify(address)
+                userId: String(userId)
             }
         });
 
@@ -192,13 +189,13 @@ app.post('/create-checkout-session', async (req, res) => {
         res.json({ url: session.url });
 
     } catch (error) {
-        console.error("❌ Stripe session error:", error);
+        console.error("❌ Stripe session error:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
 
 
-// 💵 CASH ON DELIVERY (INTENTIONAL ORDER CREATION)
+// 💵 COD ORDER
 app.post('/create-cod-order', async (req, res) => {
     const { items, userId, address } = req.body;
 
@@ -207,7 +204,8 @@ app.post('/create-cod-order', async (req, res) => {
     }
 
     try {
-        const total = calculateTotal(items);
+        const total = items.reduce((sum, item) =>
+            sum + Number(item.price) * Number(item.quantity), 0);
 
         const orderRef = await db.collection('orders').add({
             userId,
@@ -218,8 +216,6 @@ app.post('/create-cod-order', async (req, res) => {
             paymentMethod: 'COD',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
-
-        console.log("📝 COD Order:", orderRef.id);
 
         res.status(201).json({
             success: true,
@@ -247,12 +243,10 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
             updatedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
-        console.log("✅ Status updated:", orderId);
-
         res.json({ success: true });
 
     } catch (error) {
-        console.error("❌ Status update error:", error);
+        console.error("❌ Update error:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -262,7 +256,7 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on ${PORT}`);
 });
 
 module.exports = app;
