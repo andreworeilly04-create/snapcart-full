@@ -178,7 +178,7 @@ app.post('/create-checkout-session', async (req, res) => {
             userId,
             items,
             address,
-            status: 'Pending Payment',
+            status: 'Payment Incomplete',
             paymentMethod: 'stripe',
             amount: total,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -239,7 +239,7 @@ app.post('/create-cod-order', async (req, res) => {
             items,
             address,
             amount: total,
-            status: 'Order Placed (COD)',
+            status: 'Payment Pending',
             paymentMethod: 'COD',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
