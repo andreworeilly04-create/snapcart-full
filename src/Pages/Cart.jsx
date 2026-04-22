@@ -15,10 +15,18 @@ const saveCart = (cart) => {
 // =========================
 const Cart = ({ cart, setCart }) => {
 
-  const subtotal = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
+  // =========================
+  // 🔥 SAFE CALCULATION (FIXED ROOT BUG)
+  // =========================
+  const subtotal = cart.reduce((acc, item) => {
+    const price = Number(item.price);
+    const qty = Number(item.quantity);
+
+    // prevent NaN pollution (THIS WAS BREAKING STRIPE)
+    if (!Number.isFinite(price) || !Number.isFinite(qty)) return acc;
+
+    return acc + (price * qty);
+  }, 0);
 
   const shipping = cart.length > 0 ? 5.99 : 0;
   const tax = subtotal * 0.1;
@@ -44,7 +52,7 @@ const Cart = ({ cart, setCart }) => {
   const decreaseQty = (item) => {
     const updatedCart = cart.map((i) =>
       i.id === item.id && i.size === item.size
-        ? { ...i, quantity: Math.max(1, i.quantity - 1) }
+        ? { ...i, quantity: Math.max(1, Number(i.quantity) - 1) }
         : i
     );
 
@@ -58,7 +66,7 @@ const Cart = ({ cart, setCart }) => {
   const increaseQty = (item) => {
     const updatedCart = cart.map((i) =>
       i.id === item.id && i.size === item.size
-        ? { ...i, quantity: i.quantity + 1 }
+        ? { ...i, quantity: Number(i.quantity) + 1 }
         : i
     );
 
@@ -134,7 +142,8 @@ const Cart = ({ cart, setCart }) => {
                   </div>
 
                   <p className="cart_price">
-                    ${item.price.toFixed(2)}
+                    {/* FIXED: safe number conversion */}
+                    ${Number(item.price || 0).toFixed(2)}
                   </p>
 
                 </div>
@@ -151,7 +160,7 @@ const Cart = ({ cart, setCart }) => {
 
           </div>
 
-          {/* ORDER SUMMARY (FIXED COLOR LOGIC VIA CSS) */}
+          {/* ORDER SUMMARY */}
           <div className="cart-summary">
 
             <h3 className="order_summary">
@@ -180,7 +189,7 @@ const Cart = ({ cart, setCart }) => {
 
             <Link to="/checkout">
               <button className="checkout_btn">
-             Proceed to Checkout
+                Proceed to Checkout
               </button>
             </Link>
 
