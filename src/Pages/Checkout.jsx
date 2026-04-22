@@ -28,7 +28,7 @@ const Checkout = ({ cart, setCart }) => {
     };
 
     // =========================
-    // SAFE TOTAL CALC
+    // SAFE TOTAL CALC (UI UNCHANGED)
     // =========================
     const subtotal = cart.reduce((acc, item) => {
         const price = Number(item.price);
@@ -91,21 +91,26 @@ const Checkout = ({ cart, setCart }) => {
         }
 
         // =========================
-        // FIXED CART CLEANING (IMPORTANT)
+        // 🔥 FIXED CART CLEANING (STRIPE FIX)
         // =========================
         const cleanedCart = cart
-            .map(item => ({
-                name: item.name,
-                price: Number(item.price),
-                quantity: Number(item.quantity)
-            }))
-            .filter(item =>
-                item.name &&
-                Number.isFinite(item.price) &&
-                Number.isFinite(item.quantity) &&
-                item.price > 0 &&
-                item.quantity > 0
-            );
+            .map(item => {
+                const rawPrice = item.price;
+
+                const price =
+                    typeof rawPrice === "string"
+                        ? parseFloat(rawPrice.replace(/[^0-9.]/g, ""))
+                        : Number(rawPrice);
+
+                const quantity = Number(item.quantity);
+
+                return {
+                    name: item.name,
+                    price: isNaN(price) ? 0 : price,
+                    quantity: isNaN(quantity) ? 1 : quantity
+                };
+            })
+            .filter(item => item.price > 0 && item.quantity > 0);
 
         if (cleanedCart.length === 0) {
             toast.error("Cart is empty or invalid");
@@ -190,7 +195,6 @@ const Checkout = ({ cart, setCart }) => {
                 <h3 className="checkout__title">Checkout</h3>
             </div>
 
-            {/* CART ITEMS */}
             <div className="cart__container">
                 <div className="card-details">
                     {cart.map((item) => (
@@ -220,7 +224,6 @@ const Checkout = ({ cart, setCart }) => {
                 </div>
             </div>
 
-            {/* DELIVERY */}
             <div className="input__title--container">
                 <h4>Delivery Information</h4>
             </div>
@@ -236,7 +239,6 @@ const Checkout = ({ cart, setCart }) => {
                 <input name="zipCode" value={addressData.zipCode} onChange={onChangeHandler} placeholder="Zip Code" />
             </div>
 
-            {/* PAYMENT */}
             <h4>Select Payment Method</h4>
 
             <div className="payment__method__container">
@@ -255,7 +257,6 @@ const Checkout = ({ cart, setCart }) => {
                 />
             </div>
 
-            {/* SUMMARY */}
             <div className="cart-summary--checkout">
                 <h3>Order Summary</h3>
 
