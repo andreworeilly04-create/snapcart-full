@@ -47,14 +47,15 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ======================
-// HEALTH CHECK
+// HEALTH
 // ======================
 app.get('/', (req, res) => {
     res.send('Server running');
 });
 
+
 // ======================
-// STRIPE WEBHOOK
+// STRIPE WEBHOOK (FIXED + SAFE)
 // ======================
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
 
@@ -73,49 +74,46 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
         return res.status(400).send("Webhook Error");
     }
 
-    console.log("🔥 WEBHOOK EVENT:", event.type);
+    console.log("🔥 EVENT:", event.type);
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
 
         try {
-            console.log("🧾 SESSION ID:", session.id);
-
             const orderId = session.metadata?.orderId;
 
             if (!orderId) {
-                console.log("❌ No orderId in metadata");
+                console.log("❌ Missing orderId in metadata");
                 return res.json({ received: true });
             }
 
-            // 🔥 UPDATE EXISTING ORDER (OPTION A CORE FIX)
+            // 🔥 UPDATE ORDER SAFELY
             await db.collection('orders').doc(orderId).update({
                 status: "Paid",
                 stripeSessionId: session.id,
                 paymentMethod: "Stripe",
-                paidAt: admin.firestore.FieldValue.serverTimestamp(),
-                amount: session.amount_total / 100
+                amount: (session.amount_total || 0) / 100,
+                paidAt: admin.firestore.FieldValue.serverTimestamp()
             });
 
             console.log("✅ ORDER UPDATED:", orderId);
 
         } catch (err) {
-            console.error("❌ Webhook update error:", err);
+            console.error("❌ ORDER UPDATE ERROR:", err);
         }
     }
 
     res.json({ received: true });
 });
 
+
 // ======================
-// CREATE STRIPE SESSION (OPTION A FIXED)
+// STRIPE SESSION
 // ======================
 app.post('/create-checkout-session', async (req, res) => {
 
     try {
         const { items, userId, address } = req.body;
-
-        console.log("🧾 REQUEST:", req.body);
 
         if (!Array.isArray(items) || items.length === 0) {
             return res.status(400).json({ error: "Cart empty" });
@@ -126,27 +124,19 @@ app.post('/create-checkout-session', async (req, res) => {
         }
 
         // ======================
-        // STEP 1: CREATE ORDER FIRST (IMPORTANT)
+        // FIXED SAFE TOTAL CHECK (DEBUGGING HELP)
         // ======================
-        const orderRef = await db.collection('orders').add({
-            userId,
-            items,
-            address,
-            status: "Pending Payment",
-            paymentMethod: "Stripe",
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
+        const cleanItems = items.map(item => ({
+            ...item,
+            price: Number(item.price) || 0,
+            quantity: Number(item.quantity) || 1
+        }));
 
-        console.log("🟡 TEMP ORDER CREATED:", orderRef.id);
-
-        // ======================
-        // STEP 2: STRIPE LINE ITEMS
-        // ======================
-        const line_items = items.map(item => ({
+        const line_items = cleanItems.map(item => ({
             price_data: {
                 currency: 'usd',
                 product_data: {
-                    name: item.name
+                    name: item.name || "Product"
                 },
                 unit_amount: Math.round(item.price * 100),
             },
@@ -154,7 +144,21 @@ app.post('/create-checkout-session', async (req, res) => {
         }));
 
         // ======================
-        // STEP 3: STRIPE SESSION
+        // CREATE ORDER FIRST
+        // ======================
+        const orderRef = await db.collection('orders').add({
+            userId,
+            items: cleanItems,
+            address,
+            status: "Pending Payment",
+            paymentMethod: "Stripe",
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log("🟡 ORDER CREATED:", orderRef.id);
+
+        // ======================
+        // STRIPE SESSION
         // ======================
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
@@ -165,13 +169,12 @@ app.post('/create-checkout-session', async (req, res) => {
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
 
-            // ONLY SAFE DATA
             metadata: {
                 orderId: orderRef.id
             }
         });
 
-        console.log("✅ STRIPE SESSION CREATED:", session.id);
+        console.log("✅ STRIPE SESSION:", session.id);
 
         res.json({ url: session.url });
 
@@ -181,22 +184,29 @@ app.post('/create-checkout-session', async (req, res) => {
     }
 });
 
+
 // ======================
-// COD ORDER (UNCHANGED)
+// COD ORDER (FIXED NaN)
 // ======================
 app.post('/create-cod-order', async (req, res) => {
 
     try {
         const { items, userId, address } = req.body;
 
-        const total = items.reduce(
+        const cleanItems = items.map(item => ({
+            ...item,
+            price: Number(item.price) || 0,
+            quantity: Number(item.quantity) || 1
+        }));
+
+        const total = cleanItems.reduce(
             (sum, item) => sum + item.price * item.quantity,
             0
         );
 
         const doc = await db.collection('orders').add({
             userId,
-            items,
+            items: cleanItems,
             address,
             amount: total,
             status: "COD",
@@ -211,6 +221,7 @@ app.post('/create-cod-order', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // ======================
 // START SERVER
