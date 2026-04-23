@@ -143,16 +143,13 @@ app.use(express.json());
 
 
 // 💰 HELPER: CALCULATE TOTAL
-const total = calculateTotal = (items) => {
+const calculateTotal = (items) => {
     
-    const subtotal = items.reduce((total, item) => {
-        return total + (Number(item.price) * Number(item.quantity));
-    }, 0);
-    const tax = subtotal * 0.10;
-    const shipping = 5.99;
-
-    return subtotal + tax + shipping;
-};
+    const subtotal = items.reduce((acc, item) => acc + (Number(item.price) * Number(item.quantity)), 0);
+     const tax = subtotal * 0.10;
+     const shipping = 5.99;
+     return subtotal + tax + shipping;
+} 
 
 
 // 🧾 CREATE STRIPE CHECKOUT SESSION
@@ -174,7 +171,8 @@ app.post('/create-checkout-session', async (req, res) => {
         const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-full-beta.vercel.app";
         console.log("🌐 CLIENT_URL:", CLIENT_URL);
 
-        // ✅ CALCULATE TOTAL
+        // ✅ CALCULATE total
+        const total = calculateTotal(items);
         console.log("💰 Calculated total:", total);
 
         // ✅ CREATE ORDER
