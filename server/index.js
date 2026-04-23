@@ -189,6 +189,9 @@ app.post('/create-checkout-session', async (req, res) => {
         console.log("📝 Order created:", orderRef.id);
 
         // ✅ CREATE STRIPE SESSION
+
+        const total = calculateTotal(items);
+        
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
@@ -236,8 +239,7 @@ app.post('/create-cod-order', async (req, res) => {
     }
 
     try {
-        const total = calculateTotal(items);
-
+        
         const orderRef = await db.collection('orders').add({
             userId,
             items,
