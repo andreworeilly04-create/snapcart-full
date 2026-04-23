@@ -189,22 +189,40 @@ app.post('/create-checkout-session', async (req, res) => {
         console.log("📝 Order created:", orderRef.id);
 
         // ✅ CREATE STRIPE SESSION
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            mode: 'payment',
-            line_items:[
-                {
+        
+          const line_items = items.map((item) => ({
                 price_data: {
                     currency: 'usd',
                     product_data: {
-                        name: item.name
+                        name: item.name,
                     },
                     unit_amount:Math.round(total * 100),
                 },
                 quantity: 1,
-            },
-        ],   
-            
+                
+            }));
+
+            line_items.push({
+                price_data: {
+                    currency:'usd',
+                    product_data:{ name: 'Sales Tax (10%)'},
+                    unit_amount:Math.round((total - 5.99 - (total / 1.1)) * 100)
+                },
+                quantity:1,
+            });
+
+            line_items.push({
+                price_data: {
+                    currency:'usd',
+                    product_data:{ name: 'Shipping Fee'},
+                    unit_amount: 599,
+                },
+                quantity:1,
+            });
+
+            const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
 
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
