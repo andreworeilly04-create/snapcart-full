@@ -201,8 +201,7 @@ app.post('/create-checkout-session', async (req, res) => {
                     unit_amount: Math.round(Number(item.price) * 100),
                 },
                 quantity: Number(item.quantity),
-                tax: Number(item.tax),
-                shipping: Number(item.shipping)
+                
             })),
 
             success_url: `${CLIENT_URL}/orders`,
