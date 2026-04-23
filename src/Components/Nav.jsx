@@ -63,17 +63,12 @@ const Nav = ({ toggleTheme, toggleMenu, cart = [], setCart, user }) => {
             </li>
 
             {/* USER MENU (UNCHANGED CLASSNAMES) */}
-            {user ? ( 
+            <Link className="user_link" to={user ? " " : "/login"}>
+
               <li className="profile__link">
                 <FontAwesomeIcon icon={faUser} />
               </li>
-            ) : (
-               <Link className="user_link" to= "/login">
-                 <li className="profile__link">
-                <FontAwesomeIcon icon={faUser} />
-              </li>
-              </Link>
-            )}
+
               {user && (
                 <div className="login_dashboard--container">
 
@@ -86,8 +81,9 @@ const Nav = ({ toggleTheme, toggleMenu, cart = [], setCart, user }) => {
                   </p>
 
                 </div>
-
               )}
+
+            </Link>
 
             {/* CART */}
             <Link className="cart_link" to="/cart">
