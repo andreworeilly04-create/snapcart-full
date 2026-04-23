@@ -146,7 +146,7 @@ app.use(express.json());
 const calculateTotal = (items) => {
     
     return items.reduce((total, item) => {
-        return total + (Number(item.price) + (Number(item.shipping) + (Number(item.tax))) * Number(item.quantity));
+        return total = (Number(item.price) + (Number(item.shipping) + (Number(item.tax))) * Number(item.quantity));
     }, 0);
 };
 
