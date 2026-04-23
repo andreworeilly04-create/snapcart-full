@@ -11,10 +11,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
     process.exit(1);
 }
 
-const clientUrl = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
+const clientUrl = process.env.CLIENT_URL || "https://snapcart-full-beta.vercel.app";
 
 if (!process.env.CLIENT_URL) {
-    console.warn("⚠️ CLIENT_URL missing, using default https://snapcart-store.vercel.app");
+    console.warn("⚠️ CLIENT_URL missing, using default https://snapcart-full-beta.vercel.app");
 }
 
 // 🔥 INIT FIREBASE
@@ -120,7 +120,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             }
 
             await orderRef.update({
-                status: 'Paid',
+                status: 'Paid (stripe)',
                 stripeSessionId: session.id,
                 amount: session.amount_total / 100,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -144,8 +144,8 @@ app.use(express.json());
 
 // 💰 HELPER: CALCULATE TOTAL
 const calculateTotal = (items) => {
+    
     return items.reduce((total, item) => {
-        const subtotal = items.reduce((total, item))
         return total + (Number(item.price) * Number(item.quantity));
     }, 0);
 };
@@ -167,7 +167,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
     try {
         // ✅ SAFE CLIENT URL
-        const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-store.vercel.app";
+        const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-full-beta.vercel.app";
         console.log("🌐 CLIENT_URL:", CLIENT_URL);
 
         // ✅ CALCULATE TOTAL
@@ -179,7 +179,7 @@ app.post('/create-checkout-session', async (req, res) => {
             userId,
             items,
             address,
-            status: 'Payment Incomplete',
+            status: 'Payment Incomplete (stripe)',
             paymentMethod: 'stripe',
             amount: total,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
@@ -240,7 +240,7 @@ app.post('/create-cod-order', async (req, res) => {
             items,
             address,
             amount: total,
-            status: 'Payment Pending(COD)',
+            status: 'Payment Pending (COD)',
             paymentMethod: 'COD',
             createdAt: admin.firestore.FieldValue.serverTimestamp()
         });
