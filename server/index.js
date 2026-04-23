@@ -120,7 +120,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
             }
 
             await orderRef.update({
-                status: 'Paid (stripe)',
+                status: 'Paid (Stripe)',
                 stripeSessionId: session.id,
                 amount: session.amount_total / 100,
                 updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -146,7 +146,7 @@ app.use(express.json());
 const calculateTotal = (items) => {
     
     return items.reduce((total, item) => {
-        return total + (Number(item.price) * Number(item.quantity));
+        return total + (Number(item.price) + (Number(item.shipping) + (Number(item.tax))) * Number(item.quantity));
     }, 0);
 };
 
@@ -179,7 +179,7 @@ app.post('/create-checkout-session', async (req, res) => {
             userId,
             items,
             address,
-            status: 'Payment Incomplete (stripe)',
+            status: 'Payment Incomplete (Stripe)',
             paymentMethod: 'stripe',
             amount: total,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
