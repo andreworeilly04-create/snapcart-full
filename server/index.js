@@ -152,7 +152,6 @@ const calculateTotal = (items) => {
      return subtotal + tax + shipping;
 };
 
-
 // 🧾 CREATE STRIPE CHECKOUT SESSION
 app.post('/create-checkout-session', async (req, res) => {
     console.log("📥 Incoming body:", req.body);
@@ -172,7 +171,7 @@ app.post('/create-checkout-session', async (req, res) => {
         const CLIENT_URL = process.env.CLIENT_URL || "https://snapcart-full-beta.vercel.app";
         console.log("🌐 CLIENT_URL:", CLIENT_URL);
 
-        // ✅ CALCULATE total
+        // ✅ CALCULATE TOTAL
         const total = calculateTotal(items);
         console.log("💰 Calculated total:", total);
 
@@ -190,25 +189,21 @@ app.post('/create-checkout-session', async (req, res) => {
         console.log("📝 Order created:", orderRef.id);
 
         // ✅ CREATE STRIPE SESSION
-
-        const total = calculateTotal(items);
-        
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             mode: 'payment',
 
-            line_items: [
-                {
+            line_items:items.map(item => ({
                 price_data: {
                     currency: 'usd',
                     product_data: {
-                        name: item.name,
+                        name: item.name
                     },
                     unit_amount:Math.round(total * 100),
                 },
-                quantity: 1,
-            }
-        ],
+                quantity: Number(item.quantity),
+                
+            })),
 
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
@@ -240,7 +235,8 @@ app.post('/create-cod-order', async (req, res) => {
     }
 
     try {
-        
+        const total = calculateTotal(items);
+
         const orderRef = await db.collection('orders').add({
             userId,
             items,
