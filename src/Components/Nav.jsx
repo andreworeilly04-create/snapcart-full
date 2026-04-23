@@ -63,7 +63,7 @@ const Nav = ({ toggleTheme, toggleMenu, cart = [], setCart, user }) => {
             </li>
 
             {/* USER MENU (UNCHANGED CLASSNAMES) */}
-            <Link className="user_link" to={user ? " " : "/login"}>
+            <Link className="user_link" to={user ? "#" : "/login"}>
 
               <li className="profile__link">
                 <FontAwesomeIcon icon={faUser} />
