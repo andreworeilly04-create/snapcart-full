@@ -201,7 +201,7 @@ app.post('/create-checkout-session', async (req, res) => {
                     },
                     unit_amount:Math.round(total * 100),
                 },
-                quantity: Number(item.quantity),
+                
                 
             })),
 
