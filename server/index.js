@@ -145,7 +145,7 @@ app.use(express.json());
 // 💰 HELPER: CALCULATE TOTAL
 const calculateTotal = (items) => {
     
-    const subtotal = items.reduce((acc, item) => acc + (Number(item.price) * Number(item.quantity)), 0);
+    const subtotal = items.reduce((acc, item) => {return acc + (Number(item.price) * Number(item.quantity));}, 0);
      const tax = subtotal * 0.10;
      const shipping = 5.99;
      return subtotal + tax + shipping;
