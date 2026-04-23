@@ -220,7 +220,7 @@ app.post('/create-checkout-session', async (req, res) => {
                 price_data: {
                     currency:'usd',
                     product_data:{ name: 'Sales Tax (10%)'},
-                    unit_amount:Math.round((total - 5.99)* 100),
+                    unit_amount:Math.round((total - 5.99) * 0.10 * 100),
                 },
                 quantity:1,
             }
