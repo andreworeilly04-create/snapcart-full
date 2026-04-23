@@ -193,7 +193,8 @@ app.post('/create-checkout-session', async (req, res) => {
             payment_method_types: ['card'],
             mode: 'payment',
 
-            line_items:items.map(item => ({
+            line_items:[
+                {
                 price_data: {
                     currency: 'usd',
                     product_data: {
@@ -201,9 +202,10 @@ app.post('/create-checkout-session', async (req, res) => {
                     },
                     unit_amount:Math.round(total * 100),
                 },
-                quantity: Number(item.quantity),
-                
-            })),
+                quantity: 1,
+            },
+        ],   
+            
 
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
