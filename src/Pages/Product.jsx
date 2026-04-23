@@ -45,7 +45,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
     };
 
 
-    if (!product) return <div className="not_found">Product not found!</div>;
+    if (!product) return <h3 className="not_found">Product not found!</h3>;
 
 
 

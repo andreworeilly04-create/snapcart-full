@@ -58,7 +58,7 @@ const Orders = () => {
                 <h3 className="orders__title">Your Orders</h3>
 
                 {loading ? (
-                    <p className="loading">Loading orders...</p>
+                    <h3 className="loading">Loading orders...</h3>
                 ) : orders.length === 0 ? (
                     <div className="empty_orders--container">
                         <h3 className="empty__orders">You don't have any orders yet</h3>
