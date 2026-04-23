@@ -145,9 +145,13 @@ app.use(express.json());
 // 💰 HELPER: CALCULATE TOTAL
 const calculateTotal = (items) => {
     
-    return items.reduce((total, item) => {
-        const unitTotal = Number(item.price) + Number(item.shipping) + Number(item.tax); return total + (unitTotal * Number(item.quantity));
+    const subtotal = items.reduce((total, item) => {
+        return total + (Number(item.price) * Number(item.quantity));
     }, 0);
+    const tax = subtotal * 0.10;
+    const shipping = 5.99;
+
+    return subtotal + tax + shipping;
 };
 
 
@@ -192,17 +196,35 @@ app.post('/create-checkout-session', async (req, res) => {
             payment_method_types: ['card'],
             mode: 'payment',
 
-            line_items: items.map(item => ({
+            line_items: [
+                ...items.map((item) => ({
                 price_data: {
                     currency: 'usd',
                     product_data: {
                         name: item.name
                     },
-                    unit_amount:Math.round((Number(item.price) * 0.10 + (5.99 / items.length)) * 100),
+                    unit_amount:Math.round(Number(item.price) * 100),
                 },
                 quantity: Number(item.quantity),
-                
             })),
+
+            {
+                price_data:{
+                    currency:'usd',
+                    product_data:{name:'Shipping Fee'},
+                    unit_amount:599,
+                },
+                quantity:1,
+            },
+            {
+                price_data: {
+                    currency:'usd',
+                    product_data:{ name: 'Sales Tax (10%)'},
+                    unit_amount:Math.round((total - 5.99)* 100),
+                },
+                quantity:1,
+            }
+        ],
 
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
