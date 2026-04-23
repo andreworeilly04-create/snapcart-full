@@ -197,32 +197,15 @@ app.post('/create-checkout-session', async (req, res) => {
             mode: 'payment',
 
             line_items: [
-                ...items.map((item) => ({
+                {
                 price_data: {
                     currency: 'usd',
                     product_data: {
-                        name: item.name
+                        name: item.name,
                     },
-                    unit_amount:Math.round(Number(item.price) * 100),
+                    unit_amount:Math.round(total * 100),
                 },
-                quantity: Number(item.quantity),
-            })),
-
-            {
-                price_data:{
-                    currency:'usd',
-                    product_data:{name:'Shipping Fee'},
-                    unit_amount:599,
-                },
-                quantity:1,
-            },
-            {
-                price_data: {
-                    currency:'usd',
-                    product_data:{ name: 'Sales Tax (10%)'},
-                    unit_amount:Math.round((total - 5.99) * 0.10 * 100),
-                },
-                quantity:1,
+                quantity: 1,
             }
         ],
 
