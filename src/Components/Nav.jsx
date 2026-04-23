@@ -109,7 +109,7 @@ const Nav = ({ toggleTheme, toggleMenu, cart = [], setCart, user }) => {
               <FontAwesomeIcon icon={faSun} />
             </li>
 
-            <Link className="user_link" to={user ? "/" : "/login"}>
+            <Link className="user_link" to={user ? "#" : "/login"}>
 
               <li className="profile__link">
                 <FontAwesomeIcon icon={faUser} />

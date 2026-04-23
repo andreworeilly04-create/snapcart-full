@@ -42,8 +42,6 @@ const Cart = ({ cart, setCart }) => {
 
     setCart(updatedCart);
     saveCart(updatedCart);
-
-    toast.success("Item removed");
   };
 
   // =========================
