@@ -149,7 +149,7 @@ const calculateTotal = (items) => {
      const tax = subtotal * 0.10;
      const shipping = 5.99;
      return subtotal + tax + shipping;
-} 
+};
 
 
 // 🧾 CREATE STRIPE CHECKOUT SESSION
