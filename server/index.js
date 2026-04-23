@@ -175,7 +175,6 @@ app.post('/create-checkout-session', async (req, res) => {
         console.log("🌐 CLIENT_URL:", CLIENT_URL);
 
         // ✅ CALCULATE TOTAL
-        const total = calculateTotal(items);
         console.log("💰 Calculated total:", total);
 
         // ✅ CREATE ORDER
