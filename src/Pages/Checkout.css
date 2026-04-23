@@ -131,4 +131,10 @@
         grid-template-columns: repeat(1, 1fr);
         width:80%;
     }
+
+    .payment__method__container{
+        flex-direction:column;
+        align-items: center;
+    }
+
 }
