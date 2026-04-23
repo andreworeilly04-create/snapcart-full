@@ -90,3 +90,14 @@
     transition: all 300ms ease;
     color:white;
 }
+
+.loading{
+    text-align: center;
+    transition:all 300ms ease;
+    font-weight:bold;
+}
+
+.dark .loading{
+    transition:all 300ms ease;
+    color:white;
+}

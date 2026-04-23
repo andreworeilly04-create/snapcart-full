@@ -139,6 +139,10 @@
     transition: all 300ms ease;
 }
 
+.not_found{
+    font-size:clamp(20px, 5vw, 39px);
+}
+
 @media(max-width:908px) {
     .product__description {
         max-width: 600px;
