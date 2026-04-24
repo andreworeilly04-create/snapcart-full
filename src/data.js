@@ -1,39 +1,39 @@
-import airpodsPro from "./assets/Airpods_Pro.png"
-import electricScooter from "./assets/Electric Scooter.png"
-import metaQuest3 from "./assets/Meta_Quest_3.webp"
-import ps5 from "./assets/Playstation 5.png"
-import hoverboard from "./assets/Hoverboard.webp"
-import iPadPro from "./assets/IPad-Pro.png"
-import rollerblade from "./assets/Rollerblade.webp"
+import airpodsPro from "./assets/Airpods_Pro.png" //
+import electricScooter from "./assets/Electric Scooter.png"  //
+import metaQuest3 from "./assets/Meta_Quest_3.png" //
+import ps5 from "./assets/Playstation_5.png" //
+import hoverboard from "./assets/Hoverboard.png" //
+import iPadPro from "./assets/IPad-Pro.png" //
+import rollerblade from "./assets/Rollerblade.png"
 import Sony from "./assets/Sony.png"
-import roku55 from "./assets/Roku_Tv_55.jpg"
-import xboxseriesx from "./assets/xbox-series-x.jpg"
-import mensocks from "./assets/men_socks.webp"
-import womensocks from "./assets/womensocks.jpeg"
+import roku55 from "./assets/Roku_Tv_55.png"
+import xboxseriesx from "./assets/xbox-series-x.png"
+import mensocks from "./assets/men_socks.png"
+import womensocks from "./assets/womensocks.png"
 import hpgaming from "./assets/hpgaming.png"
 import gta6 from "./assets/gta6.png"
 import bluehoverboard from "./assets/bluehoverboard.png"
-import onewheel from "./assets/onewheel.webp"
-import rollerbladewheel from "./assets/wheels.jpg"
-import typec from './assets/typec.webp'
-import iphonecharger from './assets/iphonecharger.jpg'
+import onewheel from "./assets/onewheel.png"
+import rollerbladewheel from "./assets/wheels.png"
+import typec from './assets/typec.png'
+import iphonecharger from './assets/iphonecharger.png'
 import iphone17 from './assets/Apple-iPhone-17-Pro-max.png'
-import hppavilion from './assets/hppavillion.webp'
-import googlep10pro from './assets/googlepixel10pro.webp'
+import hppavilion from './assets/hppavillion.png'
+import googlep10pro from './assets/googlepixel10pro.png'
 import ps5controller from './assets/PS5-Controller-PNG-Image.png'
-import escooterbattery from './assets/escooterbattery367.8.webp'
+import escooterbattery from './assets/escooterbattery367.8.png'
 import menjeans from './assets/men-jeans.png'
 import menshorts from './assets/men-shorts.avif'
 import skinbluejeanswomen from './assets/skinnybluejeansforwomen.png'
 import basketball from './assets/basketball.png'
 import soccerball from './assets/soccerball.png'
-import tennisball from './assets/tennisball.webp'
-import football from './assets/football.webp'
-import securitybreach from './assets/fnafsecuritybreach.webp'
+import tennisball from './assets/tennisball.png'
+import football from './assets/football.png'
+import securitybreach from './assets/fnafsecuritybreach.png'
 import minecraft from './assets/minecraft.png'
-import soniccolorsultimate from './assets/soniccolorsultimate.jpg'
-import callofdutyvanguard from './assets/callofdutyvanguard.jpg'
-import gyroorseat from './assets/elctric_scooter_with_seat_C1S.webp'
+import soniccolorsultimate from './assets/soniccolorsultimate.png'
+import callofdutyvanguard from './assets/callofdutyvanguard.png'
+import gyroorseat from './assets/elctric_scooter_with_seat_C1S.png'
 
 export const AllProducts = [
     {
