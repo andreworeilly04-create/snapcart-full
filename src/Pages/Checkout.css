@@ -57,7 +57,8 @@
 
 .payment__method__container{
     display: flex;
-    justify-content: center;
+    justify-content: center; 
+    align-items:center;
     flex-wrap:wrap;
     gap:100px;
     padding-bottom:29px;
