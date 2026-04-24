@@ -58,6 +58,7 @@ return (
       <h2 className="products__title">
         All Products
       </h2>
+      <div className="select_container">
       <select onChange={handleFilterChange} id="filter" defaultValue="DEFAULT">
         <option value="DEFAULT" disabled>Sort by</option>
         <option value="LOW_TO_HIGH" >Sort by Low to High</option>
@@ -73,6 +74,7 @@ return (
         <option value="E_VEHICLES">E Vehicles</option>
         <option value="ACCESSORIES">Accessories</option>
       </select>
+      </div>
       <div className="input__container">
         <input onChange={handleSearch} className={`input ${isInputOpen ? "open" : ""}`} type="text" placeholder="Search for products..." />
 

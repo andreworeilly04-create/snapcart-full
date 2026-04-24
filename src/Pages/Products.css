@@ -27,11 +27,22 @@
 }
 
 select {
-    position: absolute;
-    right: 0;
     cursor: pointer;
 }
 
+.select_container{
+    display: flex;
+    justify-content: space-between;
+    flex-direction:row-reverse;
+}
+
+#filter{
+    margin-right:15px;
+}
+
+#category{
+    margin-left:15px;
+}
 
 .search {
     position: relative;
