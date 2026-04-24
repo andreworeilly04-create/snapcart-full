@@ -66,6 +66,7 @@
 .stripe{
     max-width:150px;
     transition:all 300ms ease;
+    height:auto;
 }
 
 .stripe.selected{
@@ -87,6 +88,7 @@
 .COD{
     max-width:150px;
     transition:all 300ms ease;
+    height:auto;
 }
 
 .COD.selected{
