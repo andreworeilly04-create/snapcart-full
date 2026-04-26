@@ -47,6 +47,8 @@ const Checkout = ({ cart, setCart }) => {
         localStorage.setItem('snapcart_items', JSON.stringify(updatedCart));
     };
 
+    
+
     const removeFromCart = (itemObject) => {
         const updatedCart = cart.filter(
             item => item.id !== itemObject.id || item.size !== itemObject.size
@@ -93,8 +95,8 @@ const Checkout = ({ cart, setCart }) => {
 
         if (paymentMethod === 'COD') {
             try {
-                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
-                const response = await fetch(`${API_BASE_URL}/create-cod-order`,{
+                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com';
+                const response = await fetch(`${API_BASE_URL}/create-cod-order`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -125,8 +127,8 @@ const Checkout = ({ cart, setCart }) => {
         else if (paymentMethod === 'stripe') {
             try {
 
-                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com'; 
-                const response = await fetch(`${API_BASE_URL}/create-checkout-session`,{
+                const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://snapcart-full-4.onrender.com';
+                const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -155,6 +157,23 @@ const Checkout = ({ cart, setCart }) => {
         }
     }
 
+    const updatedQty = (event, item) => {
+    const val = event.target.value
+
+    if (val === "") {
+    const updatedCart = cart.map((i) => i.id === item.id && i.size === item.size ? { ...i, quantity: val } : i )
+    setCart(updatedCart);
+    return;
+  }
+
+  const newQty = Math.max(1, Number(val));
+
+  if (newQty >= 0){
+    const updatedCart = cart.map((i) => i.id === item.id && i.size === item.size ? {...i, quantity:newQty } : i );
+    setCart(updatedCart);
+  }
+  };
+
     return (
         <section id="checkout">
 
@@ -176,17 +195,11 @@ const Checkout = ({ cart, setCart }) => {
                                 {item.size && <p className="item_size">Size: {item.size}</p>}
 
                                 <div className="quantity-controls">
-                                    <button
-                                        className="qty-btn"
-                                        onClick={() => updateQuantity(item.id, -1, item.size)}
-                                    >-</button>
+                                 
+                                    <input type="number" className="qty-number"
+                                        value={item.quantity} onChange={(e) => updatedQty(e, item)}
+                                    />
 
-                                    <span className="qty-number">{item.quantity}</span>
-
-                                    <button
-                                        className="qty-btn"
-                                        onClick={() => updateQuantity(item.id, 1, item.size)}
-                                    >+</button>
                                 </div>
 
                                 <p className="item_quantity">Quantity: {item.quantity}</p>

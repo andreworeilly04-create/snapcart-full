@@ -44,32 +44,23 @@ const Cart = ({ cart, setCart }) => {
     saveCart(updatedCart);
   };
 
-  // =========================
-  // ➖ DECREASE QTY
-  // =========================
-  const decreaseQty = (item) => {
-    const updatedCart = cart.map((i) =>
-      i.id === item.id && i.size === item.size
-        ? { ...i, quantity: Math.max(1, Number(i.quantity) - 1) }
-        : i
-    );
+  
+  const updatedQty = (event, item) => {
+    const val = event.target.value
 
+    if (val === "") {
+    const updatedCart = cart.map((i) => i.id === item.id && i.size === item.size ? { ...i, quantity: val } : i )
+    setCart(updatedCart);
+    return;
+  }
+
+  const newQty = Math.max(1, Number(val));
+
+  if (newQty >= 0){
+    const updatedCart = cart.map((i) => i.id === item.id && i.size === item.size ? {...i, quantity:newQty } : i );
     setCart(updatedCart);
     saveCart(updatedCart);
-  };
-
-  // =========================
-  // ➕ INCREASE QTY
-  // =========================
-  const increaseQty = (item) => {
-    const updatedCart = cart.map((i) =>
-      i.id === item.id && i.size === item.size
-        ? { ...i, quantity: Number(i.quantity) + 1 }
-        : i
-    );
-
-    setCart(updatedCart);
-    saveCart(updatedCart);
+  }
   };
 
   return (
@@ -119,23 +110,12 @@ const Cart = ({ cart, setCart }) => {
                   {/* QUANTITY CONTROLS */}
                   <div className="quantity-controls">
 
-                    <button
-                      className="qty-btn"
-                      onClick={() => decreaseQty(item)}
-                    >
-                      -
-                    </button>
+    
 
-                    <span className="qty-number">
-                      {item.quantity}
-                    </span>
-
-                    <button
-                      className="qty-btn"
-                      onClick={() => increaseQty(item)}
-                    >
-                      +
-                    </button>
+                    <input type="number" className="qty-number"
+                     value={item.quantity} onChange={(e)=> updatedQty(e, item)} 
+                     />
+                   
 
                   </div>
 

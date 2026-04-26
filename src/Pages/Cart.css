@@ -323,6 +323,17 @@ span{
     color: black;
 }
 
+.qty-number{
+    width:30%;
+    color:black;
+    transition:all 300ms ease;
+}
+
+.dark .qty-number{
+    color:black;
+    transition:all 300ms ease;
+}
+
 @media (max-width:872px) {
     .cart__container {
         flex-direction: column;
