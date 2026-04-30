@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { registerUser, loginUser } from "../Firebase";
 import "./Login.css";
 
-const Login = ({ setUser }) => {
+const Login = ({ setUser, showPassword, setShowPassword }) => {
   const navigate = useNavigate();
   const [showRegister, setShowRegister] = useState(false);
 
@@ -103,12 +103,16 @@ const Login = ({ setUser }) => {
 
         <input
         className="password"
-          type="password"
+          type={showPassword ? "text" : "password"}
           placeholder="Password"
           value={loginPassword}
           onChange={(e) => setLoginPassword(e.target.value)}
           required
         />
+
+         <button type="button" className="toggle-btn" onClick={() => setShowPassword(!showPassword)}>
+          {showPassword ? "Hide Password" : "Show Password"}
+        </button>
 
         <button className="login__btn">Login</button>
       </form>
@@ -163,23 +167,28 @@ const Login = ({ setUser }) => {
           required
         />
 
+        
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           className="password"
           placeholder="Password"
           value={regPassword}
           onChange={(e) => setRegPassword(e.target.value)}
           required
         />
-
+          
         <input
-          type="password"
+          type={showPassword ? "text" : "password"}
           className="password"
           placeholder="Confirm Password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
+
+          <button type="button" className="toggle-btn" onClick={() => setShowPassword(!showPassword)}>
+          {showPassword ? "Hide Password" : "Show Password"}
+        </button>
 
         <button className="register__btn">Register</button>
 

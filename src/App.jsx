@@ -46,6 +46,7 @@ function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isInputOpen, setIsInputOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
   const toggleSearch = () => setIsInputOpen((prev) => !prev);
@@ -173,7 +174,7 @@ function App() {
         {/* FIXED LOGIN */}
         <Route
           path="/login"
-          element={<Login setUser={setUser} />}
+          element={<Login setUser={setUser} showPassword={showPassword} setShowPassword={setShowPassword}  />}
         />
 
         <Route
