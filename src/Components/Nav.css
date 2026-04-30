@@ -172,7 +172,7 @@ button:hover {
 
 .mobile__menu {
     position: absolute;
-    background-color: rgb(15, 218, 233);
+    background-color:lightskyblue;
     z-index: 1000;
     left: 0;
     bottom: 0;
@@ -191,7 +191,7 @@ button:hover {
 }
 
 .dark .mobile__menu {
-    background-color: rgb(1, 30, 32);
+    background-color: rgb(2, 2, 83);
 }
 
 .mobile__menu--link {
