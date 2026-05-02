@@ -30,12 +30,16 @@
     gap:30px;
     padding:0 12px;
     grid-template-columns: repeat(4, 1fr);
+
 }
 
 .product{
     width:100%;
     max-width:400px;
+    aspect-ratio:1 / 1;
+    object-fit:contain;
 }
+
 
 .product__card{
     padding-bottom:50px;

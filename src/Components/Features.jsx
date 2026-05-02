@@ -17,7 +17,7 @@ const Features = () => {
                         View our featured products
                     </h2>
                 </div>
-                <div class="product__container">
+                <div className="product__container">
                     <div className="products">
                         {AllProducts.slice(0, 4).map((product) => (
                             <div className="product__card" key={product.id}>
