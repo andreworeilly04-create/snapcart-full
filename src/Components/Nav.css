@@ -49,7 +49,12 @@ button:hover {
 .logo__img {
     max-width: 200px;
     height: auto;
-    padding: 12px 10px;
+    transition:all 300ms ease;
+}
+
+.dark .logo__img{
+    filter:invert(1);
+    transition:all 300ms ease;
 }
 
 .logo {

@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { auth } from '../Firebase';
 import '../App.css';
 import './Nav.css';
-import snapcart from '../assets/SnapCart.png';
+import snapcart from '../assets/SnapCart.svg';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {

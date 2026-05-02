@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import snapcart from '../assets/SnapCart.png'
+import snapcart from '../assets/SnapCart.svg'
 import applestore from '../assets/AppleStore.png'
 import googleplay from '../assets/GooglePlay.png'
 import './Footer.css'

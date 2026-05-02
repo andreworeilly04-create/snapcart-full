@@ -48,6 +48,12 @@
     max-width: 200px;
     padding-bottom: 30px;
     padding-top: 50px;
+    transition:all 300ms ease;
+}
+
+.dark .footer__logo--img{
+    filter:invert(1);
+    transition:all 300ms ease;
 }
 
 .footer__copyright {
@@ -101,9 +107,7 @@
 }
 
 @media(max-width:400px) {
-    .footer__logo {
-        width: 60%;
-    }
+    
 
     .app__store--container {
         width: 40%;
