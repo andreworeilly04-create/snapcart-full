@@ -81,7 +81,7 @@
     color:gray;
 }
 
-@media (max-width:505px){
+@media (max-width:623px){
     .products{
         grid-template-columns: repeat(2, 1fr);
     }
