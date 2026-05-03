@@ -79,6 +79,12 @@
 
 .old_product__price{
     color:gray;
+    transition:all 300ms ease;
+}
+
+.dark .old_product__price{
+    color:lightgray;
+    transition:all 300ms ease;
 }
 
 @media (max-width:623px){
