@@ -48,7 +48,7 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(true);
 
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
   const toggleSearch = () => setIsInputOpen((prev) => !prev);
