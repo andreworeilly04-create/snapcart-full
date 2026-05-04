@@ -121,13 +121,15 @@ const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
                     localStorage.removeItem('snapcart_items');
                     toast.success("Order placed successfully")
                     setCart([]);
-
                     navigate('/orders');
+                    setIsProcessing(false);
                 } else {
                     toast.error("Order failed")
+                    setIsProcessing(false);
                 }
             } catch (error) {
                 toast.error("COD Error:", error);
+                setIsProcessing(false);
             }
         }
 
@@ -156,14 +158,14 @@ const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
                 if (response.ok) {
                     toast.success("Order placed successfully")
                     setCart([]);
+                    setIsProcessing(false);
                 }
 
 
             } catch (error) {
                 toast.error("An error occured during checkout please try again");
-            } finally {
                 setIsProcessing(false);
-            }
+            } 
         }
     }
 
