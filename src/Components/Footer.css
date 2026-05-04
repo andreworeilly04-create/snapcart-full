@@ -100,15 +100,13 @@
         margin: 0 auto;
         padding-right: 25px;
     }
-
+    
     .app__store--container {
         flex-direction: column;
     }
 }
 
 @media(max-width:400px) {
-    
-
     .app__store--container {
         width: 40%;
         align-items: center;

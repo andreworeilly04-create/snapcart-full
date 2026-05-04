@@ -7,7 +7,8 @@ import { toast } from 'react-toastify';
 import { auth, db } from '../Firebase';
 import { collection, serverTimestamp, } from 'firebase/firestore';
 
-const Checkout = ({ cart, setCart }) => {
+const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
+
 
     const navigate = useNavigate();
 
@@ -258,8 +259,8 @@ const Checkout = ({ cart, setCart }) => {
 
                 <div className="summary-line--total"><span className="cart">Total:</span><span className="cart_price"> ${total.toFixed(2)}</span></div>
 
-                <button onClick={handleCheckout} className="checkout_btn">
-                    Place Order
+                <button disabled={isProcessing} onClick={handleCheckout} className="checkout_btn">{isProcessing ? "Processing...":
+                    "Place Order"}
                 </button>
             </div>
 

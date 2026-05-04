@@ -48,6 +48,8 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
   const toggleSearch = () => setIsInputOpen((prev) => !prev);
 
@@ -181,7 +183,7 @@ function App() {
           path="/checkout"
           element={
             <Elements stripe={stripePromise}>
-              <Checkout cart={cart} setCart={setCart} />
+              <Checkout cart={cart} setCart={setCart} isProcessing={isProcessing} setIsProcessing={setIsProcessing} />
             </Elements>
           }
         />
