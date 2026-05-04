@@ -63,7 +63,7 @@ const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
 
     const handleCheckout = async (error) => {
 
-        setIsProcessing(true);
+       
         error.preventDefault();
 
         const currentUser = auth.currentUser;
@@ -87,6 +87,8 @@ const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
             toast.error("Please fill in all fields");
             return;
         }
+
+         setIsProcessing(true);
 
         const orderData = {
             items: cart,
