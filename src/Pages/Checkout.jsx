@@ -158,6 +158,8 @@ const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
                     setCart([]);
                 }
 
+                setIsProcessing(false);
+
             } catch (error) {
                 toast.error("An error occured during checkout please try again");
             }
