@@ -9,6 +9,8 @@ import { collection, serverTimestamp, } from 'firebase/firestore';
 
 const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
 
+    
+
 
     const navigate = useNavigate();
 
@@ -60,6 +62,8 @@ const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
     };
 
     const handleCheckout = async (error) => {
+
+        setIsProcessing(true);
         error.preventDefault();
 
         const currentUser = auth.currentUser;
