@@ -12,6 +12,8 @@ const Login = ({ setUser, showPassword, setShowPassword }) => {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
+  const [loggingIn, setLoggingIn] = useState(false);
+
   // REGISTER STATE
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
@@ -19,12 +21,14 @@ const Login = ({ setUser, showPassword, setShowPassword }) => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
+  const [registering, setRegistering] = useState(false);
+
   // =========================
   // 🔐 LOGIN
   // =========================
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-
+    setLoggingIn(true);
     try {
       const result = await loginUser(loginEmail, loginPassword);
 
@@ -35,14 +39,18 @@ const Login = ({ setUser, showPassword, setShowPassword }) => {
         localStorage.setItem("user", JSON.stringify(result.user));
 
         navigate("/");
+        setLoggingIn(false);
       } else {
         toast.error(result.error || "Login failed");
+        setLoggingIn(false);
       }
     } catch (error) {
       console.error(error);
       toast.error("Something went wrong during login");
+      setLoggingIn(false);
     }
-  };
+  }
+    
 
   // =========================
   // 🧾 REGISTER
@@ -54,6 +62,7 @@ const Login = ({ setUser, showPassword, setShowPassword }) => {
       toast.error("Passwords do not match");
       return;
     }
+    setRegistering(true);
 
     try {
       const result = await registerUser(
@@ -65,17 +74,19 @@ const Login = ({ setUser, showPassword, setShowPassword }) => {
 
       if (result.success) {
         toast.success("Account created successfully!");
-
+        setRegistering(false);
         setUser(result.user);
         localStorage.setItem("user", JSON.stringify(result.user));
 
         navigate("/");
       } else {
         toast.error(result.error || "Registration failed");
+        setRegistering(false);
       }
     } catch (error) {
       console.error(error);
       toast.error("Something went wrong during registration");
+      setRegistering(false);
     }
   };
 
@@ -114,7 +125,7 @@ const Login = ({ setUser, showPassword, setShowPassword }) => {
           {showPassword ? "Hide Password" : "Show Password"}
         </button>
 
-        <button className="login__btn">Login</button>
+        <button className="login__btn">{loggingIn ? "Logging In...": "Login"}</button>
       </form>
 
       {/* ========================= */}
@@ -190,7 +201,7 @@ const Login = ({ setUser, showPassword, setShowPassword }) => {
           {showPassword ? "Hide Password" : "Show Password"}
         </button>
 
-        <button className="register__btn">Register</button>
+        <button className="register__btn">{registering ? "Creating account...": "Register"}</button>
 
         <p
           onClick={() => setShowRegister(false)}

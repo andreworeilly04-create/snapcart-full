@@ -176,7 +176,7 @@ function App() {
         {/* FIXED LOGIN */}
         <Route
           path="/login"
-          element={<Login setUser={setUser} showPassword={showPassword} setShowPassword={setShowPassword}  />}
+          element={<Login setUser={setUser} showPassword={showPassword} setShowPassword={setShowPassword} />}
         />
 
         <Route
