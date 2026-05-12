@@ -16,7 +16,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
 
      const [selectedSize, setSelectedSize] = useState("");
 
-     const isInCart = cart.some((item) => {if (product.category === 'CLOTHING') {
+     const isInCart = cart.some((item) => {if (product.category === 'CLOTHING' || product.category === 'SKATING') {
         return item.id === product.id && item.size === selectedSize;
      } else {
         return item.id === product.id
@@ -32,14 +32,14 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
         }
     
 
-        if (product.category === 'CLOTHING' && !selectedSize) {
+        if ((product.category === 'CLOTHING' || product.category === 'SKATING') && !selectedSize) {
             toast.error("Please select a size first!");
             return;
         }
 
         const itemToAdd = {
             ...product,
-            size: product.category === 'CLOTHING' ? selectedSize : null,
+            size: (product.category === 'CLOTHING' || product.category === 'SKATING') ? selectedSize : null,
         };
         addToCart(itemToAdd);
     };
@@ -75,7 +75,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
                 <div className="product__description--container">
                     <p className="product__description">{product.description}</p>
                 </div>
-                {product.category === 'CLOTHING' && (
+                {(product.category === 'CLOTHING' || product.category === 'SKATING') && (
                     <div className="size-selector">
                         <p className="select_size">Select Size</p>
                         <div className="size-buttons">

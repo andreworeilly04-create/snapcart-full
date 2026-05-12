@@ -70,6 +70,7 @@ return (
         <option value="ELECTRONICS">Electronics</option>
         <option value="CLOTHING">Clothing</option>
         <option value="SPORTS">Sports</option>
+        <option value="SKATING">Skating</option>
         <option value="GAMES">Games</option>
         <option value="E_VEHICLES">E Vehicles</option>
         <option value="ACCESSORIES">Accessories</option>

@@ -110,7 +110,7 @@ export const AllProducts = [
         oldPrice: 200.00,
         price: 135.65,
         rating: 5,
-        category: 'SPORTS',
+        category: 'SKATING',
         quantity: 1,
         description: 'Rollerblade Zetrablade inline skates are designed for beginners and casual skaters, offering a comfortable fit and excellent stability. With a supportive high-cuff design, smooth-rolling wheels, and a secure closure system, they provide easy control and balance. Built for recreational use, they deliver a smooth, reliable ride, making them ideal for learning, fitness, or relaxed outdoor skating.'
     },
