@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faStar, faStarHalfAlt } from '@fortawesome/free-solid-svg-icons'
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons'
@@ -8,6 +8,20 @@ import { Link } from 'react-router-dom';
 
 
 const Recommended = () => {
+
+    const [filter, setFilter] = useState("");
+    
+      const [products, setProducts] = useState([]);
+    
+      const [shimmer, isShimmering] = useState(true);
+    
+      useEffect(() => {
+        setTimeout(() => {
+          isShimmering(false);
+        }, 3000);
+      }, []);
+
+
     return (
         <>
             <section id="recommended">
@@ -18,7 +32,12 @@ const Recommended = () => {
                 </div>
                 <div class="product__container">
                     <div className="products">
-                        {AllProducts.sort(() => 0.5 - Math.random()).slice(0, 4).map((product) => (
+                         {shimmer ? (
+                            Array(4).fill(0).map((_, index) => (
+                                <div key={index} className="product skeleton" style={{ height: "350px" }}></div>
+                            ))
+                        ) : (
+                            AllProducts.sort(() => 0.5 - Math.random()).slice(0, 4).map((product) => (
                             <div className="product__card" key={product.id}>
                                 <figure className="product__item">
                                    <Link to={`/product/${product.id}`}><img className="product" src={product.image} alt={product.name} /> </Link>
@@ -41,7 +60,8 @@ const Recommended = () => {
                                     })}
                                 </div>
                             </div>
-                        ))}
+                            ))
+                        )}
                     </div>
                 </div>
 

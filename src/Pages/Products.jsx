@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { faStar, faStarHalfAlt, faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons'
 import { AllProducts } from '../data'
@@ -10,6 +10,16 @@ import './Products.css'
 const Products = ({ toggleSearch, isInputOpen, handleSearch, searchTerm, }) => {
 
   const [filter, setFilter] = useState("");
+
+  const [products, setProducts] = useState([]);
+
+  const [shimmer, isShimmering] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      isShimmering(false);
+    }, 3000);
+  }, []);
 
   const handleFilterChange = (event) => {
     setFilter(event.target.value);
@@ -40,78 +50,86 @@ const Products = ({ toggleSearch, isInputOpen, handleSearch, searchTerm, }) => {
   const [category, setCategory] = useState("DEFAULT");
 
   const handleCategoryChange = (e) => {
-  setCategory(e.target.value);
+    setCategory(e.target.value);
   };
 
   const categorizedProducts = sortedProducts.filter((product) => {
     return category === 'DEFAULT' || product.category === category;
 
   })
-  .filter((product)=> {
-    if (!searchTerm) return true;
-    return product.name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+    .filter((product) => {
+      if (!searchTerm) return true;
+      return product.name.toLowerCase().includes(searchTerm.toLowerCase());
+    });
 
-return (
-  <section id="products">
-    <div className="all__products--container">
-      <h2 className="products__title">
-        All Products
-      </h2>
-      <div className="select_container">
-      <select onChange={handleFilterChange} id="filter" defaultValue="DEFAULT">
-        <option value="DEFAULT" disabled>Sort by</option>
-        <option value="LOW_TO_HIGH" >Sort by Low to High</option>
-        <option value="HIGH_TO_LOW">Sort by High to Low</option>
-        <option value="RATING">Sort by Rating</option>
-      </select>
-      <select onChange={handleCategoryChange} id="category" defaultValue="DEFAULT">
-        <option value="DEFAULT" disabled>Categories</option>
-        <option value="ELECTRONICS">Electronics</option>
-        <option value="CLOTHING">Clothing</option>
-        <option value="SPORTS">Sports</option>
-        <option value="SKATING">Skating</option>
-        <option value="GAMES">Games</option>
-        <option value="E_VEHICLES">E Vehicles</option>
-        <option value="ACCESSORIES">Accessories</option>
-      </select>
-      </div>
-      <div className="input__container">
-        <input onChange={handleSearch} className={`input ${isInputOpen ? "open" : ""}`} type="text" placeholder="Search for products..." />
 
-        {isInputOpen ? (<FontAwesomeIcon onClick={toggleSearch} className="times" icon={faTimes} />) : (
-          <FontAwesomeIcon onClick={toggleSearch} className="faSearch" icon={faSearch} />)}
+  return (
+    <section id="products">
+
+      <div className="all__products--container">
+        <h2 className="products__title">
+          All Products
+        </h2>
+        <div className="select_container">
+          <select onChange={handleFilterChange} id="filter" defaultValue="DEFAULT">
+            <option value="DEFAULT" disabled>Sort by</option>
+            <option value="LOW_TO_HIGH" >Sort by Low to High</option>
+            <option value="HIGH_TO_LOW">Sort by High to Low</option>
+            <option value="RATING">Sort by Rating</option>
+          </select>
+          <select onChange={handleCategoryChange} id="category" defaultValue="DEFAULT">
+            <option value="DEFAULT" disabled>Categories</option>
+            <option value="ELECTRONICS">Electronics</option>
+            <option value="CLOTHING">Clothing</option>
+            <option value="SPORTS">Sports</option>
+            <option value="SKATING">Skating</option>
+            <option value="GAMES">Games</option>
+            <option value="E_VEHICLES">E Vehicles</option>
+            <option value="ACCESSORIES">Accessories</option>
+          </select>
+        </div>
+        <div className="input__container">
+          <input onChange={handleSearch} className={`input ${isInputOpen ? "open" : ""}`} type="text" placeholder="Search for products..." />
+
+          {isInputOpen ? (<FontAwesomeIcon onClick={toggleSearch} className="times" icon={faTimes} />) : (
+            <FontAwesomeIcon onClick={toggleSearch} className="faSearch" icon={faSearch} />)}
+        </div>
       </div>
-    </div>
-    <div class="product__container">
-      <div className="products">
-        {categorizedProducts.map((product) => (
-          <div className="product__card" key={product.id}>
-            <figure className="product__item">
-             <Link to={`/product/${product.id}`}><img className="product" src={product.image} alt={product.name} /></Link>
-            </figure>
-            <h3 className="product__name">
-              {product.name}
-            </h3>
-            <del className="old_product__price">${product.oldPrice.toFixed(2)}</del>
-            <p className="product__price">${product.price.toFixed(2)}</p>
-            <div className="product__rating">
-              {new Array(5).fill(0).map((_, index) => {
-                const starValue = index + 1;
-                if (starValue <= product.rating) {
-                  return <FontAwesomeIcon key={index} icon={faStar} />;
-                } else if (starValue - 0.5 <= product.rating) {
-                  return <FontAwesomeIcon key={index} icon={faStarHalfAlt} />
-                } else {
-                  return <FontAwesomeIcon key={index} icon={faStarRegular} />;
-                }
-              })}
-            </div>
-          </div>
-        ))}
+      <div class="product__container">
+        <div className="products">
+          {shimmer ? (
+            Array(categorizedProducts.length || 8).fill(0).map((_, index) => (
+              <div key={index} className="product skeleton" style={{ height: "350px" }}></div>
+            ))
+          ) : (
+            categorizedProducts.map((product) => (
+              <div className="product__card" key={product.id}>
+                <figure className="product__item">
+                  <Link to={`/product/${product.id}`}><img className="product" src={product.image} alt={product.name} /></Link>
+                </figure>
+                <h3 className="product__name">
+                  {product.name}
+                </h3>
+                <del className="old_product__price">${product.oldPrice.toFixed(2)}</del>
+                <p className="product__price">${product.price.toFixed(2)}</p>
+                <div className="product__rating">
+                  {new Array(5).fill(0).map((_, index) => {
+                    const starValue = index + 1;
+                    if (starValue <= product.rating) {
+                      return <FontAwesomeIcon key={index} icon={faStar} />;
+                    } else if (starValue - 0.5 <= product.rating) {
+                      return <FontAwesomeIcon key={index} icon={faStarHalfAlt} />
+                    } else {
+                      return <FontAwesomeIcon key={index} icon={faStarRegular} />;
+                    }
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
 };
 export default Products;

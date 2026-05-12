@@ -149,6 +149,7 @@ function App() {
               toggleSearch={toggleSearch}
               handleSearch={handleSearch}
               searchTerm={searchTerm}
+              
             />
           }
         />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { faStar as faStarRegular } from '@fortawesome/free-regular-svg-icons'
 import './Product.css'
@@ -7,6 +7,18 @@ import { faStarHalfAlt, faStar, faArrowLeft } from '@fortawesome/free-solid-svg-
 import { ToastContainer, toast } from 'react-toastify';
 
 const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
+
+     const [filter, setFilter] = useState("");
+        
+          const [products, setProducts] = useState([]);
+        
+          const [shimmer, isShimmering] = useState(true);
+        
+          useEffect(() => {
+            setTimeout(() => {
+              isShimmering(false);
+            }, 3000);
+          }, []);
 
      const { productId } = useParams();
 
@@ -97,8 +109,13 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
             <div className="related__products--container">
                 <h3 className="related__products--title">Related Products</h3>
                 <div className="products">
+                     {shimmer ? (
+                            Array(4).fill(0).map((_, index) => (
+                                <div key={index} className="product skeleton" style={{ height: "350px" }}></div>
+                            ))
+                        ) : (
 
-                    {AllProducts.filter((item) => item.category === product.category && item.id !== product.id).slice(0, 4).map((product) => (
+                    AllProducts.filter((item) => item.category === product.category && item.id !== product.id).slice(0, 4).map((product) => (
                         <div className="product__card" key={product.id}>
                             <figure className="product__item">
                                 <Link to={`/product/${product.id}`}><img className="product" src={product.image} alt={product.name} /> </Link>
@@ -121,7 +138,8 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
                                 })}
                             </div>
                         </div>
-                    ))}
+                    ))
+                        )}
                 </div>
             </div>
         </section>
