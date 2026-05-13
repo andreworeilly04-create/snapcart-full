@@ -7,7 +7,7 @@ const Header = () => {
     <section id="header">
         <div className="header__container">
             <h1 className="header__title">
-                America's #1 Online Shopping Platform
+                Find Amazing Products with the Best Deals
             </h1>
             <a href="#features"><button className="browse__btn">
                 Browse Products

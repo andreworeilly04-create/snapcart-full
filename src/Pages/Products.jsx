@@ -18,7 +18,7 @@ const Products = ({ toggleSearch, isInputOpen, handleSearch, searchTerm, }) => {
   useEffect(() => {
     setTimeout(() => {
       isShimmering(false);
-    }, 3000);
+    }, 300);
   }, []);
 
   const handleFilterChange = (event) => {

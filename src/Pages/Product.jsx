@@ -17,7 +17,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
           useEffect(() => {
             setTimeout(() => {
               isShimmering(false);
-            }, 3000);
+            }, 300);
           }, []);
 
      const { productId } = useParams();

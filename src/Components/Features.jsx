@@ -17,7 +17,7 @@ const Features = () => {
     useEffect(() => {
         setTimeout(() => {
             isShimmering(false);
-        }, 3000);
+        }, 300);
     }, []);
 
     return (

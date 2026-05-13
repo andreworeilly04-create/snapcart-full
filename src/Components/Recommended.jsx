@@ -18,7 +18,7 @@ const Recommended = () => {
       useEffect(() => {
         setTimeout(() => {
           isShimmering(false);
-        }, 3000);
+        }, 300);
       }, []);
 
 

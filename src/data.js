@@ -34,6 +34,11 @@ import minecraft from './assets/minecraft.png'
 import soniccolorsultimate from './assets/soniccolorsultimate.png'
 import callofdutyvanguard from './assets/callofdutyvanguard.png'
 import gyroorseat from './assets/elctric_scooter_with_seat_C1S.png'
+import fnaf_security_breach_ps5 from './assets/fnaf_security_breach_ps5.webp'
+import Riedell from './assets/riedell_skates.png'
+import zetrablade_women from './assets/rollerblade_zetrablade_women.png'
+import Apex from './assets/apex_rollerblades.png'
+import Pacer from "./assets/pacer_women.png"
 
 export const AllProducts = [
     {
@@ -105,7 +110,7 @@ export const AllProducts = [
     },
     {
         id: 7,
-        name: 'Rollerblade Zetrablade inline skates',
+        name: 'Rollerblade Zetrablade inline skates for Men',
         image: rollerblade,
         oldPrice: 200.00,
         price: 135.65,
@@ -194,7 +199,7 @@ export const AllProducts = [
 
     {
         id: 14,
-        name: 'Grand Theft Auto 6 for xbox-series x',
+        name: 'Grand Theft Auto 6 for Xbox-series x',
         oldPrice: 39.99,
         price: 20.65,
         image: gta6,
@@ -473,5 +478,64 @@ export const AllProducts = [
         quantity: 1,
         description: 'The Gyroor C1S Electric Scooter With Seat & Carry Basket is a sit-down electric scooter designed for short-distance travel, featuring a comfortable seat, a 450W motor, and a top speed of about 15 mph. It is built for commuting or casual rides and includes a basket for carrying small items.'
     },
+{
+    id:37,
+    name: "Five Nights At Freddy's Security Breach for Playstation 5",
+    oldPrice:39.99,
+    price:28.87,
+    rating:4,
+    image:fnaf_security_breach_ps5,
+    category:'GAMES',
+    quantity:1,
+    description:"Five Nights at Freddy's: Security Breach is a first-person survival horror game where players explore a massive, eerie mall while avoiding hostile animatronics, using stealth, strategy, and limited resources to survive the night."
+},
+
+{
+    id:38,
+    name:"Riedell Roller Skates for men",
+    oldPrice:50.00,
+    price:32.99,
+    rating:4.5,
+    image:Riedell,
+    category:'SKATING',
+    quantity:1,
+    description:"Built for performance, comfort, and classic style, men’s Riedell roller skates deliver a smooth ride for skaters of every level. Designed with durable materials and precision craftsmanship, these skates provide excellent ankle support, stability, and long-lasting comfort whether you're cruising outdoors, hitting the rink, or mastering new tricks. Featuring high-quality wheels, responsive trucks, and a secure fit, Riedell skates combine timeless design with reliable performance to keep you rolling with confidence. Perfect for recreational skating, jam skating, rhythm skating, and more."
+},
+
+{
+    id:39,
+    name:"Rollerblade Zetrablade Inline Skates for Women",
+    oldPrice:200.00,
+    price:124.87,
+    rating:4.5,
+    image:zetrablade_women,
+    category:"SKATING",
+    quantity:1,
+    description:"Designed for comfort, stability, and confidence, the women’s Rollerblade Zetrablade inline skates are the perfect choice for beginner and recreational skaters. Featuring a supportive high-cuff design, secure closure system, and padded performance liner, these skates provide a comfortable fit with excellent ankle support for smooth, controlled rides. The durable monocoque frame lowers the center of gravity to improve balance and stability, while the 80mm performance wheels and SG5 bearings deliver an easy, enjoyable glide on indoor and outdoor surfaces. Whether you're learning to skate, exercising, or cruising around town, the Zetrablade offers a fun and reliable skating experience."
+},
+
+{
+    id:40,
+    name:"Apex 3 wheel Inline Skates for Men and Women",
+    oldPrice:300.00,
+    price:130.00,
+    rating:5,
+    image:Apex,
+    category:"SKATING",
+    quantity:1,
+    description:"Experience speed, control, and all-day comfort with Apex 3 Wheel Rollerblades for men and women. Designed for recreational and fitness skating, these high-performance inline skates feature a lightweight yet durable frame paired with a 3-wheel setup for smoother rides, faster acceleration, and enhanced maneuverability. The supportive boot design, secure buckle-and-lace closure system, and cushioned liner provide a comfortable, stable fit for skaters of all skill levels. Perfect for outdoor trails, urban cruising, and fitness sessions, Apex 3 Wheel Rollerblades deliver the ideal balance of speed, comfort, and performance for every ride."
+},
+
+{
+    id:41,
+    name:"Pacer Light Up Roller Skates for Women",
+    oldPrice:200.00,
+    price:170.98,
+    rating:4.5,
+    image:Pacer,
+    category:'SKATING',
+    quantity:1,
+    description:"Bring fun, style, and excitement to every skating session with Pacer Light Up Roller Skates for women. Designed for beginner and recreational skaters, these stylish quad skates feature vibrant LED light-up wheels and eye-catching details that shine as you roll. The comfortable padded boot, secure lace-up fit, and durable chassis provide the support and stability needed for smooth indoor and outdoor skating. Whether you're cruising the rink, skating the neighborhood, or showing off your style at night, Pacer Light Up Roller Skates deliver a fun, colorful ride that stands out everywhere you go. Features include smooth-rolling polyurethane wheels, responsive bearings, and a lightweight design built for comfort and performance."
+},
 
 ]
