@@ -22,15 +22,15 @@ const db = admin.firestore();
 const app = express();
 
 // ✅ CORS
-app.use(cors({ 
+app.use(cors({
     origin: function (origin, callback) {
-        if (!origin || origin.includes('localhost') || origin.includes('vercel.app')){
+        if (!origin || origin.includes('localhost') || origin.includes('vercel.app')) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials:true,
+    credentials: true,
 }));
 
 // ✅ HEALTH CHECK
@@ -271,6 +271,17 @@ app.post('/update-order-status', verifyToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+app.delete('/api/orders/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.collection('orders').doc(id).delete();
+        res.status(200).json({ message: "Order cancelled successfully " });
+
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+})
 
 
 // 🚀 START SERVER

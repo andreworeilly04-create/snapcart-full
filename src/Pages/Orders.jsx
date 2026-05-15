@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, } from 'react';
 import { Link } from 'react-router-dom';
+import axios from "axios"
 import { auth, db } from '../Firebase';
 import { toast } from 'react-toastify';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -9,6 +10,16 @@ import './Orders.css';
 const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showModal, setShowModal] = useState(false);
+
+    const cancelOrder = async (id) => {
+        try {
+            await axios.delete(`https://snapcart-full-4.onrender.com/api/orders/${id}`)
+            setOrders(prev => prev.filter(order => order.id !== id));
+        } catch (err) {
+            toast.error("Failed To cancel order", err);
+        }
+    }
 
     useEffect(() => {
         let unsubscribeSnapshot = null;
@@ -53,10 +64,12 @@ const Orders = () => {
     }, []);
 
     return (
+
+
         <section id="orders">
             <div className="orders__title--container">
                 <h3 className="orders__title">Your Orders</h3>
-
+                <div className="modal"><p className="clarify">Are you Sure you want to cancel order?</p><div className="buttons"><button className="yes">Yes</button><button className="no">No</button></div></div>
                 {loading ? (
                     <h3 className="loading">Loading orders...</h3>
                 ) : orders.length === 0 ? (
@@ -75,6 +88,7 @@ const Orders = () => {
                                 <p className="order_status">
                                     Status: <strong>{order.status}</strong>
                                 </p>
+
 
                                 {/* ✅ SAFE DATE */}
                                 <p>
@@ -105,11 +119,13 @@ const Orders = () => {
                                 <p className="order_total">
                                     Total: ${Number(order.amount || 0).toFixed(2)}
                                 </p>
+                                <button onClick={() => cancelOrder(order.id)} className="cancel">Cancel Order</button>
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
         </section>
     );
 };
