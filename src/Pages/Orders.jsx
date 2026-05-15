@@ -11,15 +11,35 @@ const Orders = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [orderToCancel, setOrderToCancel] = useState(null);
 
-    const cancelOrder = async (id) => {
+    const handleCancelClick = (id) => {
+        setOrderToCancel(id);
+        setShowModal(true);
+    };
+
+    const confirmCancel = async () => {
+        if (!orderToCancel) return;
+
+
         try {
-            await axios.delete(`https://snapcart-full-4.onrender.com/api/orders/${id}`)
-            setOrders(prev => prev.filter(order => order.id !== id));
+            setLoading(true);
+            await axios.delete(`https://snapcart-full-4.onrender.com/api/orders/${orderToCancel}`)
+            setOrders(prev => prev.filter(order => order.id !== orderToCancel));
+            setShowModal(false);
+            setOrderToCancel(null);
+            toast.success("Order cancelled successfully")
         } catch (err) {
             toast.error("Failed To cancel order", err);
+            setShowModal(false);
         }
     }
+
+
+    const closeOrderModal = () => {
+        setShowModal(false);
+        setOrderToCancel(null);
+    };
 
     useEffect(() => {
         let unsubscribeSnapshot = null;
@@ -53,7 +73,6 @@ const Orders = () => {
             } else {
                 setOrders([]);
                 setLoading(false);
-                toast.error("Please log in to see orders");
             }
         });
 
@@ -69,7 +88,8 @@ const Orders = () => {
         <section id="orders">
             <div className="orders__title--container">
                 <h3 className="orders__title">Your Orders</h3>
-                <div className="modal"><p className="clarify">Are you Sure you want to cancel order?</p><div className="buttons"><button className="yes">Yes</button><button className="no">No</button></div></div>
+                {showModal && (
+                <div className="modal"><p className="clarify">Are you Sure you want to cancel order?</p><div className="buttons"><button onClick={confirmCancel} className="yes">Yes</button><button onClick={closeOrderModal} className="no">No</button></div></div>)}
                 {loading ? (
                     <h3 className="loading">Loading orders...</h3>
                 ) : orders.length === 0 ? (
@@ -119,7 +139,7 @@ const Orders = () => {
                                 <p className="order_total">
                                     Total: ${Number(order.amount || 0).toFixed(2)}
                                 </p>
-                                <button onClick={() => cancelOrder(order.id)} className="cancel">Cancel Order</button>
+                                <button onClick={() => handleCancelClick(order.id)} className="cancel">Cancel Order</button>
                             </div>
                         ))}
                     </div>
