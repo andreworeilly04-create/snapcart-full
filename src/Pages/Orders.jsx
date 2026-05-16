@@ -139,7 +139,7 @@ const Orders = () => {
                                 <p className="order_total">
                                     Total: ${Number(order.amount || 0).toFixed(2)}
                                 </p>
-                                {!["Shipping Now", "Shipped", "Out for Delivery", "Delivered"].includes(order.status) && (
+                                {!["Preparing For Shipment" "Shipping Now", "Shipped", "Out for Delivery", "Delivered"].includes(order.status) && (
                                 <button onClick={() => handleCancelClick(order.id)} className="cancel">Cancel Order</button>)}
 
                                 {["Shipping Now", "Shipped", "Out for Delivery", "Delivered"].includes(order.status) && (<p className="status-notice">This order is {order.status} and cannot be canceled.</p>)}
