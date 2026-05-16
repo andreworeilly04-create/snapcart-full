@@ -28,7 +28,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
 
      const [selectedSize, setSelectedSize] = useState("");
 
-     const isInCart = cart.some((item) => {if (product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') {
+     const isInCart = cart.some((item) => {if (product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING' {
         return item.id === product.id && item.size === selectedSize
      } else {
         return item.id === product.id
