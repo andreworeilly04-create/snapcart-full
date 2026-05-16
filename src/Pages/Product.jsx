@@ -28,7 +28,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
 
      const [selectedSize, setSelectedSize] = useState("");
 
-     const isInCart = cart.some((item) => {if (product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN SKATING') {
+     const isInCart = cart.some((item) => {if (product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') {
         return item.id === product.id && item.size === selectedSize;
      } else {
         return item.id === product.id
@@ -44,14 +44,14 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
         }
     
 
-        if ((product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN CLOTHING') && !selectedSize) {
+        if ((product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') && !selectedSize) {
             toast.error("Please select a size first!");
             return;
         }
 
         const itemToAdd = {
             ...product,
-            size: (product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN SKATING') ? selectedSize : null,
+            size: (product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') ? selectedSize : null,
         };
         addToCart(itemToAdd);
     };
@@ -87,7 +87,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
                 <div className="product__description--container">
                     <p className="product__description">{product.description}</p>
                 </div>
-                {(product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN SKATING') && (
+                {(product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') && (
                     <div className="size-selector">
                         <p className="select_size">Select Size</p>
                         <div className="size-buttons">
