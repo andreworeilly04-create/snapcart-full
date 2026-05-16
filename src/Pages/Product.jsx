@@ -44,7 +44,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
         }
     
 
-        if ((product.category === 'CLOTHING' || product.category === 'SKATING') && !selectedSize) {
+        if ((product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN CLOTHING') && !selectedSize) {
             toast.error("Please select a size first!");
             return;
         }
