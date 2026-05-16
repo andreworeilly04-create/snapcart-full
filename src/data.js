@@ -523,7 +523,7 @@ export const AllProducts = [
     image:Apex,
     category:"MEN SKATING",
     quantity:1,
-    description:"Experience speed, control, and all-day comfort with Apex 3 Wheel Rollerblades for men and women. Designed for recreational and fitness skating, these high-performance inline skates feature a lightweight yet durable frame paired with a 3-wheel setup for smoother rides, faster acceleration, and enhanced maneuverability. The supportive boot design, secure buckle-and-lace closure system, and cushioned liner provide a comfortable, stable fit for skaters of all skill levels. Perfect for outdoor trails, urban cruising, and fitness sessions, Apex 3 Wheel Rollerblades deliver the ideal balance of speed, comfort, and performance for every ride."
+    description:"Experience speed, control, and all-day comfort with Apex 3 Wheel Rollerblades for Men. Designed for recreational and fitness skating, these high-performance inline skates feature a lightweight yet durable frame paired with a 3-wheel setup for smoother rides, faster acceleration, and enhanced maneuverability. The supportive boot design, secure buckle-and-lace closure system, and cushioned liner provide a comfortable, stable fit for skaters of all skill levels. Perfect for outdoor trails, urban cruising, and fitness sessions, Apex 3 Wheel Rollerblades deliver the ideal balance of speed, comfort, and performance for every ride."
 },
 
 {
@@ -535,7 +535,19 @@ export const AllProducts = [
     image:Pacer,
     category:'WOMEN SKATING',
     quantity:1,
-    description:"Bring fun, style, and excitement to every skating session with Pacer Light Up Roller Skates for women. Designed for beginner and recreational skaters, these stylish quad skates feature vibrant LED light-up wheels and eye-catching details that shine as you roll. The comfortable padded boot, secure lace-up fit, and durable chassis provide the support and stability needed for smooth indoor and outdoor skating. Whether you're cruising the rink, skating the neighborhood, or showing off your style at night, Pacer Light Up Roller Skates deliver a fun, colorful ride that stands out everywhere you go. Features include smooth-rolling polyurethane wheels, responsive bearings, and a lightweight design built for comfort and performance."
+    description:"Bring fun, style, and excitement to every skating session with Pacer Light Up Roller Skates for Women. Designed for beginner and recreational skaters, these stylish quad skates feature vibrant LED light-up wheels and eye-catching details that shine as you roll. The comfortable padded boot, secure lace-up fit, and durable chassis provide the support and stability needed for smooth indoor and outdoor skating. Whether you're cruising the rink, skating the neighborhood, or showing off your style at night, Pacer Light Up Roller Skates deliver a fun, colorful ride that stands out everywhere you go. Features include smooth-rolling polyurethane wheels, responsive bearings, and a lightweight design built for comfort and performance."
+},
+
+    {
+    id:42,
+    name:"Apex 3 wheel Inline Skates for Women",
+    oldPrice:300.00,
+    price:130.00,
+    rating:5,
+    image:Apex,
+    category:"WOMEN SKATING",
+    quantity:1,
+    description:"Experience speed, control, and all-day comfort with Apex 3 Wheel Rollerblades for Women. Designed for recreational and fitness skating, these high-performance inline skates feature a lightweight yet durable frame paired with a 3-wheel setup for smoother rides, faster acceleration, and enhanced maneuverability. The supportive boot design, secure buckle-and-lace closure system, and cushioned liner provide a comfortable, stable fit for skaters of all skill levels. Perfect for outdoor trails, urban cruising, and fitness sessions, Apex 3 Wheel Rollerblades deliver the ideal balance of speed, comfort, and performance for every ride."
 },
 
 ]
