@@ -28,7 +28,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
 
      const [selectedSize, setSelectedSize] = useState("");
 
-     const isInCart = cart.some((item) => {if (product.category === 'CLOTHING' || product.category === 'SKATING') {
+     const isInCart = cart.some((item) => {if (product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN SKATING') {
         return item.id === product.id && item.size === selectedSize;
      } else {
         return item.id === product.id
