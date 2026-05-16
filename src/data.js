@@ -115,7 +115,7 @@ export const AllProducts = [
         oldPrice: 200.00,
         price: 135.65,
         rating: 5,
-        category: 'SKATING',
+        category: 'MEN SKATING',
         quantity: 1,
         description: 'Rollerblade Zetrablade inline skates are designed for beginners and casual skaters, offering a comfortable fit and excellent stability. With a supportive high-cuff design, smooth-rolling wheels, and a secure closure system, they provide easy control and balance. Built for recreational use, they deliver a smooth, reliable ride, making them ideal for learning, fitness, or relaxed outdoor skating.'
     },
@@ -164,7 +164,7 @@ export const AllProducts = [
         price: 12.54,
         image: mensocks,
         rating: 5,
-        category: 'CLOTHING',
+        category: 'MEN CLOTHING',
         quantity: 1,
         size:"S, M, L, XL, XXL",
         description: 'Hanes X-Temp Cushioned Crew Socks 12-Pack are comfortable, breathable socks designed for all-day wear. They feature X-Temp technology that helps regulate temperature and keep feet cool and dry. With cushioned soles, a soft fabric blend, and reinforced heel and toe areas, they offer durability and support for work, sports, or casual use.'
@@ -178,7 +178,7 @@ export const AllProducts = [
         price: 12.54,
         image: womensocks,
         rating: 5,
-        category: 'CLOTHING',
+        category: 'WOMEN CLOTHING',
         quantity: 1,
         size:"S, M, L, XL, XXL",
         description: 'Hanes Cool Comfort Socks for Women (size 8–12) are soft, breathable socks designed for everyday comfort. They feature moisture-wicking Cool Comfort technology that helps keep feet dry and cool throughout the day. This 10-pair value pack offers a cushioned fit with reinforced heel and toe areas for added durability, making them ideal for daily wear, work, or light activity.'
@@ -338,7 +338,7 @@ export const AllProducts = [
         price: 15.65,
         image: menjeans,
         rating: 3.5,
-        category: 'CLOTHING',
+        category: 'MEN CLOTHING',
         quantity: 1,
         size:"S, M, L, XL, XXL",
         description: 'Men’s jeans are durable, versatile pants made primarily from denim, designed for comfort and everyday wear. They come in various fits—such as slim, regular, and relaxed—and styles ranging from classic blue to modern distressed looks, making them suitable for casual and semi-casual outfits.'
@@ -351,7 +351,7 @@ export const AllProducts = [
         price: 20.32,
         image: menshorts,
         rating: 4.5,
-        category: 'CLOTHING',
+        category: 'MEN CLOTHING',
         quantity: 1,
         size:"S, M, L, XL, XXL",
         description: 'Men’s shorts are comfortable, lightweight garments designed for warm weather and casual wear. They come in various styles—such as athletic, cargo, and chino—offering flexibility, breathability, and ease of movement for everyday activities.'
@@ -364,7 +364,7 @@ export const AllProducts = [
         price: 23.54,
         rating: 4.5,
         image: skinbluejeanswomen,
-        category: 'CLOTHING',
+        category: 'WOMEN CLOTHING',
         size:"S, M, L, XL, XXL",
         quantity: 1,
         description: 'Women’s skinny blue jeans are form-fitting denim pants that hug the body from waist to ankle, offering a sleek and flattering silhouette. Typically made with stretch fabric, they provide comfort and flexibility while maintaining a stylish, modern look suitable for casual or dressy outfits.'
@@ -497,7 +497,7 @@ export const AllProducts = [
     price:32.99,
     rating:4.5,
     image:Riedell,
-    category:'SKATING',
+    category:'MEN SKATING',
     quantity:1,
     description:"Built for performance, comfort, and classic style, men’s Riedell roller skates deliver a smooth ride for skaters of every level. Designed with durable materials and precision craftsmanship, these skates provide excellent ankle support, stability, and long-lasting comfort whether you're cruising outdoors, hitting the rink, or mastering new tricks. Featuring high-quality wheels, responsive trucks, and a secure fit, Riedell skates combine timeless design with reliable performance to keep you rolling with confidence. Perfect for recreational skating, jam skating, rhythm skating, and more."
 },
@@ -509,19 +509,19 @@ export const AllProducts = [
     price:124.87,
     rating:4.5,
     image:zetrablade_women,
-    category:"SKATING",
+    category:"WOMEN SKATING",
     quantity:1,
     description:"Designed for comfort, stability, and confidence, the women’s Rollerblade Zetrablade inline skates are the perfect choice for beginner and recreational skaters. Featuring a supportive high-cuff design, secure closure system, and padded performance liner, these skates provide a comfortable fit with excellent ankle support for smooth, controlled rides. The durable monocoque frame lowers the center of gravity to improve balance and stability, while the 80mm performance wheels and SG5 bearings deliver an easy, enjoyable glide on indoor and outdoor surfaces. Whether you're learning to skate, exercising, or cruising around town, the Zetrablade offers a fun and reliable skating experience."
 },
 
 {
     id:40,
-    name:"Apex 3 wheel Inline Skates for Men and Women",
+    name:"Apex 3 wheel Inline Skates for Men",
     oldPrice:300.00,
     price:130.00,
     rating:5,
     image:Apex,
-    category:"SKATING",
+    category:" MEN SKATING",
     quantity:1,
     description:"Experience speed, control, and all-day comfort with Apex 3 Wheel Rollerblades for men and women. Designed for recreational and fitness skating, these high-performance inline skates feature a lightweight yet durable frame paired with a 3-wheel setup for smoother rides, faster acceleration, and enhanced maneuverability. The supportive boot design, secure buckle-and-lace closure system, and cushioned liner provide a comfortable, stable fit for skaters of all skill levels. Perfect for outdoor trails, urban cruising, and fitness sessions, Apex 3 Wheel Rollerblades deliver the ideal balance of speed, comfort, and performance for every ride."
 },
@@ -533,7 +533,7 @@ export const AllProducts = [
     price:170.98,
     rating:4.5,
     image:Pacer,
-    category:'SKATING',
+    category:'WOMEN SKATING',
     quantity:1,
     description:"Bring fun, style, and excitement to every skating session with Pacer Light Up Roller Skates for women. Designed for beginner and recreational skaters, these stylish quad skates feature vibrant LED light-up wheels and eye-catching details that shine as you roll. The comfortable padded boot, secure lace-up fit, and durable chassis provide the support and stability needed for smooth indoor and outdoor skating. Whether you're cruising the rink, skating the neighborhood, or showing off your style at night, Pacer Light Up Roller Skates deliver a fun, colorful ride that stands out everywhere you go. Features include smooth-rolling polyurethane wheels, responsive bearings, and a lightweight design built for comfort and performance."
 },
