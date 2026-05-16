@@ -51,7 +51,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
 
         const itemToAdd = {
             ...product,
-            size: (product.category === 'CLOTHING' || product.category === 'SKATING') ? selectedSize : null,
+            size: (product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN SKATING') ? selectedSize : null,
         };
         addToCart(itemToAdd);
     };
