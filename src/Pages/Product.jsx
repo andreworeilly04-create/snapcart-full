@@ -87,7 +87,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
                 <div className="product__description--container">
                     <p className="product__description">{product.description}</p>
                 </div>
-                {(product.category === 'CLOTHING' || product.category === 'SKATING') && (
+                {(product.category === 'MEN CLOTHING' && 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && 'WOMEN SKATING') && (
                     <div className="size-selector">
                         <p className="select_size">Select Size</p>
                         <div className="size-buttons">
