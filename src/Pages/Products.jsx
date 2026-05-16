@@ -83,7 +83,8 @@ const Products = ({ toggleSearch, isInputOpen, handleSearch, searchTerm, }) => {
             <option value="MEN CLOTHING">Men's Clothing</option>
             <option value="WOMEN CLOTHING">Women's Clothing</option>
             <option value="SPORTS">Sports</option>
-            <option value="SKATING">Skating</option>
+            <option value="MEN SKATING">Men's Skating</option>
+            <option value="WOMEN SKATING">Women's Skating</option>
             <option value="GAMES">Games</option>
             <option value="E_VEHICLES">E Vehicles</option>
             <option value="ACCESSORIES">Accessories</option>
