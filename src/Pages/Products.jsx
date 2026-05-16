@@ -80,7 +80,8 @@ const Products = ({ toggleSearch, isInputOpen, handleSearch, searchTerm, }) => {
           <select onChange={handleCategoryChange} id="category" defaultValue="DEFAULT">
             <option value="DEFAULT" disabled>Categories</option>
             <option value="ELECTRONICS">Electronics</option>
-            <option value="CLOTHING">Clothing</option>
+            <option value="MEN CLOTHING">Men's Clothing</option>
+            <option value="WOMEN CLOTHING">Women's Clothing</option>
             <option value="SPORTS">Sports</option>
             <option value="SKATING">Skating</option>
             <option value="GAMES">Games</option>
