@@ -38,20 +38,20 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
       
     const handleAddToCart = () => {
 
-        if (isInCart) , {
+        if (isInCart) {
             navigate('/cart');
             return;
         }
     
 
-        if ((product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') && !selectedSize) {
+        if ((product.category === 'MEN CLOTHING' || product.category === 'WOMEN CLOTHING' || product.category === 'MEN SKATING' || product.category === 'WOMEN SKATING') && !selectedSize) {
             toast.error("Please select a size first!");
             return;
         }
 
         const itemToAdd = {
             ...product,
-            size: (product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') ? selectedSize : null,
+            size: (product.category === 'MEN CLOTHING' || product.category === 'WOMEN CLOTHING' || product.category === 'MEN SKATING' || product.category === 'WOMEN SKATING') ? selectedSize : null,
         };
         addToCart(itemToAdd);
     };
@@ -87,7 +87,7 @@ const Product = ({ AllProducts, addToCart, cart, isLoggedIn }) => {
                 <div className="product__description--container">
                     <p className="product__description">{product.description}</p>
                 </div>
-                {(product.category === 'MEN CLOTHING' && product.category === 'WOMEN CLOTHING') || (product.category === 'MEN SKATING' && product.category === 'WOMEN SKATING') && (
+                {(product.category === 'MEN CLOTHING' || product.category === 'WOMEN CLOTHING' || product.category === 'MEN SKATING' || product.category === 'WOMEN SKATING' && (
                     <div className="size-selector">
                         <p className="select_size">Select Size</p>
                         <div className="size-buttons">
