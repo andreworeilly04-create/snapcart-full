@@ -159,7 +159,7 @@ export const AllProducts = [
 
     {
         id: 11,
-        name: 'Hanes x-temp socks for men 12-pairs',
+        name: 'Hanes x-temp socks for Men 12-pairs',
         oldPrice: 34.65,
         price: 12.54,
         image: mensocks,
@@ -359,7 +359,7 @@ export const AllProducts = [
 
     {
         id: 27,
-        name: 'Skinny blue jeans for women',
+        name: 'Skinny blue jeans for Women',
         oldPrice: 55.65,
         price: 23.54,
         rating: 4.5,
@@ -492,7 +492,7 @@ export const AllProducts = [
 
 {
     id:38,
-    name:"Riedell Roller Skates for men",
+    name:"Riedell Roller Skates for Men",
     oldPrice:50.00,
     price:32.99,
     rating:4.5,
@@ -521,7 +521,7 @@ export const AllProducts = [
     price:130.00,
     rating:5,
     image:Apex,
-    category:" MEN SKATING",
+    category:"MEN SKATING",
     quantity:1,
     description:"Experience speed, control, and all-day comfort with Apex 3 Wheel Rollerblades for men and women. Designed for recreational and fitness skating, these high-performance inline skates feature a lightweight yet durable frame paired with a 3-wheel setup for smoother rides, faster acceleration, and enhanced maneuverability. The supportive boot design, secure buckle-and-lace closure system, and cushioned liner provide a comfortable, stable fit for skaters of all skill levels. Perfect for outdoor trails, urban cruising, and fitness sessions, Apex 3 Wheel Rollerblades deliver the ideal balance of speed, comfort, and performance for every ride."
 },
