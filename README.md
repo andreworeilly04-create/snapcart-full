@@ -40,12 +40,63 @@ SnapCart supports Cash on Delivery (COD) for users who do not have access to cre
 
 ## Tech Stack
 
-* Frontend: React / Next.js
-* Styling: CSS / Responsive Design
-* Backend: Node.js
-* Database: Firebase
-* Payments: Stripe
-* Deployment: Vercel / Render
+* React
+* Firebase
+* Express.js
+* Node.js
+* Stripe API
+* Responsive CSS
+
+---
+
+## Installation & Setup
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/snapcart-ecommerce.git
+```
+
+### Navigate Into the Project Folder
+
+```bash
+cd snapcart-ecommerce
+```
+
+### Install Dependencies
+
+```bash
+npm install
+```
+
+### Start the Frontend
+
+```bash
+npm run dev
+```
+
+### Start the Backend Server
+
+```bash
+npm start
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the root directory and add the following:
+
+```env
+VITE_FIREBASE_API_KEY=your_firebase_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+
+STRIPE_SECRET_KEY=your_stripe_secret_key
+```
 
 ---
 
@@ -62,7 +113,6 @@ The main goal of SnapCart is to create an accessible, secure, and modern e-comme
 * Product reviews and ratings
 * Email notifications
 * AI-powered product recommendations
-* Return or Replace Items
 * Multi-language support
 
 ---
