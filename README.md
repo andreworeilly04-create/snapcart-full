@@ -1,70 +1,71 @@
-# Getting Started with Create React App
+# SnapCart E-Commerce
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
 
-## Available Scripts
+SnapCart E-Commerce is a modern full-stack e-commerce platform built to deliver a fast, responsive, and user-friendly shopping experience across all devices. The project focuses on accessibility, secure payments, performance optimization, and overall customer convenience.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 🌙 Dark Mode Support
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+SnapCart includes a fully integrated dark mode designed for users who browse at night, experience eye strain, or are sensitive to bright screens. This improves accessibility and creates a more comfortable shopping experience in low-light environments.
 
-### `npm test`
+### 📱 Mobile Responsive Design
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The platform is fully responsive and optimized for mobile devices since the majority of online shopping traffic comes from smartphones and tablets. Users can seamlessly browse, shop, and checkout on any screen size.
 
-### `npm run build`
+### 💳 Secure Stripe Payment Integration
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+SnapCart uses Stripe for secure online payments, allowing customers to safely complete purchases using trusted payment processing technology.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### ❌ Cancel Order Feature
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Users can cancel orders in case they accidentally place a purchase or simply change their mind. This feature improves flexibility and customer satisfaction.
 
-### `npm run eject`
+### ⚡ Skeleton Loading Screens
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Skeleton loading components were added to create a smoother user experience while data is loading. This reduces perceived wait times and keeps the interface visually engaging.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 🔘 Interactive Button States
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Buttons visually respond when users interact with them, providing better feedback and improving the overall usability and responsiveness of the application.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### 💵 Cash on Delivery Payment Option
 
-## Learn More
+SnapCart supports Cash on Delivery (COD) for users who do not have access to credit or debit cards and prefer to pay using cash upon receiving their order.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Tech Stack
 
-### Code Splitting
+* Frontend: React / Next.js
+* Styling: CSS / Responsive Design
+* Backend: Node.js
+* Database: Firebase
+* Payments: Stripe
+* Deployment: Vercel / Render
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## Goals of the Project
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+The main goal of SnapCart is to create an accessible, secure, and modern e-commerce experience that prioritizes user comfort, performance, and convenience across all devices.
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Future Improvements
 
-### Advanced Configuration
+* User order tracking
+* Wishlist functionality
+* Product reviews and ratings
+* Email notifications
+* AI-powered product recommendations
+* Multi-language support
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## Author
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Built and developed by Andrew O'Reilly.
