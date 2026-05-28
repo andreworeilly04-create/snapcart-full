@@ -16,9 +16,13 @@ SnapCart includes a fully integrated dark mode designed for users who browse at 
 
 The platform is fully responsive and optimized for mobile devices since the majority of online shopping traffic comes from smartphones and tablets. Users can seamlessly browse, shop, and checkout on any screen size.
 
+### 🔐 Firebase Authentication & Orders
+
+Firebase is used for secure user authentication and order management. Users can create accounts, log in securely, and store order information reliably within the platform.
+
 ### 💳 Secure Stripe Payment Integration
 
-SnapCart uses Stripe for secure online payments, allowing customers to safely complete purchases using trusted payment processing technology.
+SnapCart uses Stripe for secure online payments, while Express.js is used to set up backend payment routes and securely handle Stripe checkout sessions and payment processing.
 
 ### ❌ Cancel Order Feature
 
@@ -53,31 +57,31 @@ SnapCart supports Cash on Delivery (COD) for users who do not have access to cre
 
 ### Clone the Repository
 
-```bash
+```bash id="luan2y"
 git clone https://github.com/yourusername/snapcart-ecommerce.git
 ```
 
 ### Navigate Into the Project Folder
 
-```bash
+```bash id="4fnp49"
 cd snapcart-ecommerce
 ```
 
 ### Install Dependencies
 
-```bash
+```bash id="8ffoz8"
 npm install
 ```
 
 ### Start the Frontend
 
-```bash
+```bash id="odh3q2"
 npm run dev
 ```
 
 ### Start the Backend Server
 
-```bash
+```bash id="m1p7xs"
 npm start
 ```
 
@@ -87,7 +91,7 @@ npm start
 
 Create a `.env` file in the root directory and add the following:
 
-```env
+```env id="nz3595"
 VITE_FIREBASE_API_KEY=your_firebase_key
 VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
 VITE_FIREBASE_PROJECT_ID=your_project_id
@@ -120,3 +124,4 @@ The main goal of SnapCart is to create an accessible, secure, and modern e-comme
 ## Author
 
 Built and developed by Andrew O'Reilly.
+
