@@ -62,6 +62,7 @@ The main goal of SnapCart is to create an accessible, secure, and modern e-comme
 * Product reviews and ratings
 * Email notifications
 * AI-powered product recommendations
+* Return or Replace Items
 * Multi-language support
 
 ---
