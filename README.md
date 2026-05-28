@@ -1,4 +1,4 @@
-# SnapCart E-Commerce
+# SnapCart E-Commerce App
 
 ## Overview
 
