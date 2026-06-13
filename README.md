@@ -58,13 +58,13 @@ SnapCart supports Cash on Delivery (COD) for users who do not have access to cre
 ### Clone the Repository
 
 ```bash id="luan2y"
-git clone https://github.com/yourusername/snapcart-ecommerce.git
+git clone https://github.com/andreworeilly04-create/snapcart-full.git
 ```
 
 ### Navigate Into the Project Folder
 
 ```bash id="4fnp49"
-cd snapcart-ecommerce
+cd snapcart-full
 ```
 
 ### Install Dependencies
@@ -92,14 +92,15 @@ npm start
 Create a `.env` file in the root directory and add the following:
 
 ```env id="nz3595"
-VITE_FIREBASE_API_KEY=your_firebase_key
-VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_API_KEY=AIzaSyBTlFKbHFh3_LO8ZfbrtFursbUlL8EzRe8
+VITE_FIREBASE_AUTH_DOMAIN=snapcart-117d8.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=snapcart-117d8
+VITE_FIREBASE_STORAGE_BUCKET=snapcart-117d8.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=927278879326
+VITE_FIREBASE_APP_ID=1:927278879326:web:68301ef216df66fd1cdacf
 
-STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_SECRET_KEY=sk_test_51TN5bBIrDmLuYUPnUnG7XX0eLrcRjG2gU6PK2Z2drhoCTu5iv9lZCL4Wr5s5xof1rfOpFAAwHUQCwtIGhPtxAPOM00JBewP7b0
+STRIPE_WEBHOOK_SECRET=whsec_Js243r7CM6xWLqKXHFpfHkRB74MeRdiw
 ```
 
 ---
