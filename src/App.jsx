@@ -23,7 +23,7 @@ import Orders from './Pages/Orders.jsx';
 import { onAuthStateChanged } from "firebase/auth";
 
 const stripePromise = loadStripe(
-  "pk_test_51TN5bBIrDmLuYUPnmVU0TLNrxaiaHXtwQ12mB2SdEWSFgCmU7z83k584wJsmvoXnguJbIY9SHX2xSNuTu0ZAra5q00BiRB1I0W"
+  "pk_live_51TN5aSIOFSQPK6yoaFDwls0uBRjjSjslwxmZHcYKYM7TSDVwPllnEqOIXVftIpSAlz5skie32OFFSPnxXrcOipew00KTVkOdP2"
 );
 
 function App() {
