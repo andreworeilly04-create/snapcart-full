@@ -1,3 +1,4 @@
+app.use(express.json());
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -127,7 +128,7 @@ const calculateTotals = (items) => {
 
 // 🧾 CREATE STRIPE CHECKOUT SESSION
 app.post('/create-checkout-session', async (req, res) => {
-    const { items, userId, address } = req.body;
+    const { items, userId, address, userEmail } = req.body;
 
     console.log("📥 Request:", req.body);
 
@@ -200,6 +201,7 @@ app.post('/create-checkout-session', async (req, res) => {
         // 💳 CREATE SESSION
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
+            customer_email:userEmail,
             mode: 'payment',
             line_items,
             success_url: `${CLIENT_URL}/orders`,
