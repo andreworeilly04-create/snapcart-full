@@ -127,7 +127,7 @@ const calculateTotals = (items) => {
 
 // 🧾 CREATE STRIPE CHECKOUT SESSION
 app.post('/create-checkout-session', async (req, res) => {
-    const { items, userId, address, userEmail } = req.body;
+    const { items, userId, address, } = req.body;
 
     console.log("📥 Request:", req.body);
 
@@ -202,7 +202,6 @@ app.post('/create-checkout-session', async (req, res) => {
             payment_method_types: ['card'],
             customer_email:userEmail,
             mode: 'payment',
-            line_items:line_items,
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
             metadata: {
