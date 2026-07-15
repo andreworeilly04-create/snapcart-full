@@ -146,7 +146,6 @@ const Checkout = ({ cart, setCart, isProcessing, setIsProcessing }) => {
                         address: addressData,
                         amount: total,
                         status: orderData.status,
-                        userEmail:currentUser.email
                     }),
                 });
 
