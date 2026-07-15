@@ -200,7 +200,7 @@ app.post('/create-checkout-session', async (req, res) => {
         // 💳 CREATE SESSION
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            customer_email:'andreworeilly05@gmail.com,
+            customer_email:'andreworeilly05@gmail.com',
             mode: 'payment',
             success_url: `${CLIENT_URL}/orders`,
             cancel_url: `${CLIENT_URL}/checkout`,
