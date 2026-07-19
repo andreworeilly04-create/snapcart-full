@@ -159,7 +159,7 @@ app.post('/create-checkout-session', async (req, res) => {
             userId,
             items,
             address,
-            status: 'Payment Failed (Stripe)',
+            status: 'Payment Incomplete (Stripe)',
             paymentMethod: 'stripe',
             amount: total,
             createdAt: admin.firestore.FieldValue.serverTimestamp()
